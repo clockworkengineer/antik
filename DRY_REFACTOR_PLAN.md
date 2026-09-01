@@ -110,20 +110,10 @@ namespace Antik {
 class EndianIO {
 public:
     template <typename T>
-    static void writeLittleEndian(T value, std::vector<std::uint8_t> &buffer) {
-        for (std::size_t i = 0; i < sizeof(T); ++i) {
-            buffer.push_back(static_cast<std::uint8_t>((value >> (i * 8)) & 0xFF));
-        }
-    }
+    static void writeLittleEndian(T value, std::vector<std::uint8_t> &buffer);
 
     template <typename T>
-    static const std::uint8_t *readLittleEndian(T &val, const std::uint8_t *buffer) {
-        val = 0;
-        for (std::size_t i = 0; i < sizeof(T); ++i) {
-            val |= (static_cast<T>(buffer[i]) << (i * 8));
-        }
-        return buffer + sizeof(T);
-    }
+    static const std::uint8_t *readLittleEndian(T &val, const std::uint8_t *buffer);
 };
 
 } // namespace Antik
@@ -133,14 +123,11 @@ public:
 
 ### Proposal 5: Centralized cURL Option Helpers (`CCurl`)
 
-#### Problem
-`CFTP.cpp` and `CSMTP.cpp` repeat setup calls for timeouts, SSL verification, credentials, and verbose logging on `CCurl` instances.
-
-#### Proposed Design
-Add helper convenience methods to [`include/CCurl.hpp`](file:///home/robt/projects/antik/include/CCurl.hpp):
+#### Implemented Design
+Added convenience methods to [`include/CCurl.hpp`](file:///home/robt/projects/antik/include/CCurl.hpp) & [`classes/CCurl.cpp`](file:///home/robt/projects/antik/classes/CCurl.cpp):
 
 ```cpp
-namespace Antik::CURL {
+namespace Antik::Network {
 
 class CCurl {
 public:
@@ -149,7 +136,7 @@ public:
     void setTimeouts(long connectTimeoutSec, long transferTimeoutSec);
 };
 
-} // namespace Antik::CURL
+} // namespace Antik::Network
 ```
 
 ---
@@ -193,7 +180,7 @@ private:
 | **Phase 2** | `ThreadQueue<T>` | Thread-safe queue in `CommonUtil.hpp` for `CFileEventNotifier` | **COMPLETED** |
 | **Phase 3** | `StringUtil` | Common string trimming & tokenization helpers in `CommonUtil.hpp` | **COMPLETED** |
 | **Phase 4** | `EndianIO` | Binary little-endian I/O template functions for `CZIPIO` | **COMPLETED** |
-| **Phase 5** | `CCurl` Helpers | Credential & SSL option convenience methods in `CCurl` | **PLANNED** |
+| **Phase 5** | `CCurl` Helpers | Credential & SSL option convenience methods in `CCurl` | **COMPLETED** |
 | **Phase 6** | `TestHelpers.hpp` | Temporary file and directory fixtures for unit tests in `tests/` | **PLANNED** |
 | **Phase 7** | Regression Verification | Re-run 141-test Google Test suite (`ctest`) and `gcov` coverage | **COMPLETED (100% Pass)** |
 

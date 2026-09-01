@@ -107,4 +107,24 @@ namespace Antik::Network
     {
         curl_easy_reset(m_curlConnection);
     }
+    //
+    // Convenience helper methods
+    //
+    void CCurl::setCredentials(const std::string &user, const std::string &pass)
+    {
+        setOption(CURLOPT_USERNAME, user.c_str());
+        setOption(CURLOPT_PASSWORD, pass.c_str());
+    }
+
+    void CCurl::setSSLVerification(bool verifyPeer, bool verifyHost)
+    {
+        setOption(CURLOPT_SSL_VERIFYPEER, verifyPeer ? 1L : 0L);
+        setOption(CURLOPT_SSL_VERIFYHOST, verifyHost ? 2L : 0L);
+    }
+
+    void CCurl::setTimeouts(long connectTimeoutSec, long transferTimeoutSec)
+    {
+        setOption(CURLOPT_CONNECTTIMEOUT, connectTimeoutSec);
+        setOption(CURLOPT_TIMEOUT, transferTimeoutSec);
+    }
 } //namespace Antik::Network

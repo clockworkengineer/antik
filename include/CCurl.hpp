@@ -82,6 +82,12 @@ namespace Antik::Network
         //
         void reset();
         //
+        // Convenience helper methods
+        //
+        void setCredentials(const std::string &user, const std::string &pass);
+        void setSSLVerification(bool verifyPeer = true, bool verifyHost = true);
+        void setTimeouts(long connectTimeoutSec, long transferTimeoutSec);
+        //
         // Curl global closedown(cleanup).
         //
         static void globalCleanup()
