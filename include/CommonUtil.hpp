@@ -10,6 +10,9 @@
 #include <mutex>
 #include <condition_variable>
 #include <queue>
+#include <algorithm>
+#include <cctype>
+#include <sstream>
 //
 // Antik classes
 //
@@ -157,6 +160,70 @@ namespace Antik
         mutable std::mutex m_mutex;
         std::condition_variable m_cv;
         std::queue<T> m_queue;
+    };
+
+    //
+    // Common string manipulation and tokenization helpers
+    //
+    class StringUtil
+    {
+    public:
+        static std::string trim(const std::string &str)
+        {
+            auto start = str.find_first_not_of(" \t\n\r\f\v");
+            if (start == std::string::npos) return "";
+            auto end = str.find_last_not_of(" \t\n\r\f\v");
+            return str.substr(start, end - start + 1);
+        }
+
+        static std::string stripQuotes(const std::string &str)
+        {
+            if (str.size() >= 2 && str.front() == '"' && str.back() == '"')
+            {
+                return str.substr(1, str.size() - 2);
+            }
+            return str;
+        }
+
+        static std::string stripOuterParens(const std::string &str)
+        {
+            if (str.size() >= 2 && str.front() == '(' && str.back() == ')')
+            {
+                return str.substr(1, str.size() - 2);
+            }
+            return str;
+        }
+
+        static bool equalsIgnoreCase(const std::string &a, const std::string &b)
+        {
+            if (a.size() != b.size()) return false;
+            return std::equal(a.begin(), a.end(), b.begin(), [](char c1, char c2) {
+                return std::tolower(static_cast<unsigned char>(c1)) == std::tolower(static_cast<unsigned char>(c2));
+            });
+        }
+
+        static bool startsWithIgnoreCase(const std::string &str, const std::string &prefix)
+        {
+            if (str.size() < prefix.size()) return false;
+            return std::equal(prefix.begin(), prefix.end(), str.begin(), [](char c1, char c2) {
+                return std::tolower(static_cast<unsigned char>(c1)) == std::tolower(static_cast<unsigned char>(c2));
+            });
+        }
+
+        static std::vector<std::string> split(const std::string &str, char delimiter)
+        {
+            std::vector<std::string> tokens;
+            std::string token;
+            std::istringstream tokenStream(str);
+            while (std::getline(tokenStream, token, delimiter))
+            {
+                if (!token.empty())
+                {
+                    tokens.push_back(token);
+                }
+            }
+            return tokens;
+        }
     };
 
     //

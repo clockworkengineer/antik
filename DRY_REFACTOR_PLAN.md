@@ -29,12 +29,6 @@ A comprehensive analysis of `classes/`, `utility/`, `include/`, and `tests/` ide
 
 ### Proposal 1: Generic Directory Synchronization Engine (`DirectorySyncEngine`)
 
-#### Problem
-`FTPUtil.cpp` and `SFTPUtil.cpp` both implement recursive directory synchronization, backup, and restore routines (`syncDirectory`, `backupDirectory`, `restoreDirectory`). Both files duplicate:
-- Local vs remote file modification timestamp comparison
-- File traversal loops
-- File transfer callback invocations (`FileCompletionFn`, `FileFeedBackFn`)
-
 #### Implemented Design
 Extracted a template-based `DirectorySyncEngine` in [`include/CommonUtil.hpp`](file:///home/robt/projects/antik/include/CommonUtil.hpp) driven by a protocol adapter interface:
 
@@ -60,9 +54,6 @@ public:
 
 ### Proposal 2: Thread-Safe Event Queue (`ThreadQueue<T>`)
 
-#### Problem
-`CFileEventNotifier.cpp` manually manages thread synchronization, condition variables (`m_queuedEventsWaiting`), mutex locks (`m_queuedEventsLock`), and atomic flags (`m_doWork`) inside `getNextEvent` and `stopEventGeneration`.
-
 #### Implemented Design
 Created a reusable thread-safe queue template in [`include/CommonUtil.hpp`](file:///home/robt/projects/antik/include/CommonUtil.hpp):
 
@@ -87,14 +78,11 @@ public:
 
 ### Proposal 3: String Utility & Tokenization Helper (`StringUtil`)
 
-#### Problem
-String quote stripping (`line.erase(...)`), whitespace trimming, outer parenthesis stripping, and case-insensitive comparisons are implemented with ad-hoc string operations across `CIMAPParse.cpp`, `CIMAPBodyStruct.cpp`, `CMIME.cpp`, and `CSMTP.cpp`.
-
-#### Proposed Design
-Create a `StringUtil` helper class in [`include/CommonUtil.hpp`](file:///home/robt/projects/antik/include/CommonUtil.hpp):
+#### Implemented Design
+Created a `StringUtil` helper class in [`include/CommonUtil.hpp`](file:///home/robt/projects/antik/include/CommonUtil.hpp):
 
 ```cpp
-namespace Antik::Util {
+namespace Antik {
 
 class StringUtil {
 public:
@@ -106,7 +94,7 @@ public:
     static std::vector<std::string> split(const std::string &str, char delimiter);
 };
 
-} // namespace Antik::Util
+} // namespace Antik
 ```
 
 ---
@@ -206,7 +194,7 @@ private:
 |---|---|---|---|
 | **Phase 1** | `DirectorySyncEngine` | Generic sync engine & const `FileMapper` methods in `CommonUtil.hpp` | **COMPLETED** |
 | **Phase 2** | `ThreadQueue<T>` | Thread-safe queue in `CommonUtil.hpp` for `CFileEventNotifier` | **COMPLETED** |
-| **Phase 3** | `StringUtil` | Common string trimming & tokenization helpers in `CommonUtil.hpp` | **PLANNED** |
+| **Phase 3** | `StringUtil` | Common string trimming & tokenization helpers in `CommonUtil.hpp` | **COMPLETED** |
 | **Phase 4** | `EndianIO` | Binary little-endian I/O template functions for `CZIPIO` | **PLANNED** |
 | **Phase 5** | `CCurl` Helpers | Credential & SSL option convenience methods in `CCurl` | **PLANNED** |
 | **Phase 6** | `TestHelpers.hpp` | Temporary file and directory fixtures for unit tests in `tests/` | **PLANNED** |
