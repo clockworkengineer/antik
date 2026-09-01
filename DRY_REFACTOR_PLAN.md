@@ -1,29 +1,35 @@
-# Antik C++ Library: Comprehensive DRY Refactoring Plan & Report
+# Antik C++ Library: Concrete DRY (Don't Repeat Yourself) Refactoring Plan
 
-This document contains the detailed source analysis, architecture audit, concrete DRY refactoring plan, and completion report for the Antik C++ library.
-
----
-
-## 1. Executive Summary & Source Code Audit
-
-A thorough static analysis of the Antik codebase identified five major areas of code duplication:
-
-1. **Path Construction & Normalization**: Duplicate trailing-slash stripping (`path.pop_back()`), double-slash removal (`find("//")`), and path component splitting across `FTPUtil.cpp`, `SCPUtil.cpp`, `SFTPUtil.cpp`, `CApprise.cpp`, `CFileEventNotifier.cpp`, and `CPath.cpp`.
-2. **Server Account Credentials**: Identical credential data members (`m_userName`, `m_userPassword`, `m_serverName`, `m_serverPort`) and accessors (`setServer`, `setUserAndPassword`, `getUser`, `getServer`, `getPort`) in `CFTP`, `CIMAP`, and `CSMTP`.
-3. **I/O Buffer Sizing & Management**: Duplicate `m_ioBufferSize`, `setIoBufferSize()`, and `getIoBufferSize()` declarations in `CFTP`, `CIMAP`, `CSCP`, `CSFTP`, `CSSHChannel`, and `CZIP`.
-4. **Base64 Processing**: Fragmented Base64 encoding/decoding implementations in `CSMTP.cpp` and `CMIME.cpp`.
-5. **SSH Module Exception Structures**: Identical `Exception` struct declarations (`m_errorCode`, `m_errorMessage`, `m_functionName`, `getMessage()`) duplicated in `CSSHSession.hpp`, `CSSHChannel.hpp`, `CSCP.hpp`, and `CSFTP.hpp`.
+This document presents a comprehensive source analysis and architectural refactoring plan for the Antik C++ library to eliminate code duplication, enforce reusable core abstractions, and simplify maintenance.
 
 ---
 
-## 2. Shared Abstractions & Concrete Design
+## 1. Source Code Audit & Code Duplication Analysis
 
-### A. Common Foundations ([`include/CommonAntik.hpp`](file:///home/robt/projects/antik/include/CommonAntik.hpp))
+A thorough audit of `classes/`, `utility/`, and `include/` identified seven core patterns of code duplication:
+
+| # | Pattern Name | Duplicate Code Locations | Core Problem |
+|---|---|---|---|
+| 1 | **Server Path Operations** | `FTPUtil.cpp`, `SCPUtil.cpp`, `SFTPUtil.cpp`, `CApprise.cpp`, `CFileEventNotifier.cpp`, `CPath.cpp` | Repeated `path.pop_back()` for trailing slashes, duplicate `//` character stripping, and custom path component splitting. |
+| 2 | **Server Account Credentials** | `CFTP.hpp`, `CIMAP.hpp`, `CSMTP.hpp`, `CSSHSession.hpp` | Identical fields (`m_serverName`, `m_serverPort`, `m_userName`, `m_userPassword`) and getters/setters re-declared across 4 protocol headers. |
+| 3 | **I/O Buffer Sizing** | `CFTP.hpp`, `CIMAP.hpp`, `CSFTP.hpp`, `CSCP.hpp`, `CSSHChannel.hpp`, `CZIP.hpp` | Duplicate `m_ioBufferSize`, `setIoBufferSize()`, and `getIoBufferSize()` declarations across 6 library headers. |
+| 4 | **Base64 Encoding & Decoding** | `CSMTP.cpp`, `CMIME.cpp` | Fragmented Base64 bit-shifting, encoding tables, and character decode lambda functions. |
+| 5 | **SSH Module Exception Classes** | `CSSHSession.hpp`, `CSSHChannel.hpp`, `CSCP.hpp`, `CSFTP.hpp` | Identical `Exception` struct declarations (`m_errorCode`, `m_errorMessage`, `m_functionName`, `getMessage()`, `getCode()`). |
+| 6 | **Exception Re-wrapping Boilerplate** | `CApprise.cpp`, `CSMTP.cpp`, `CFTP.cpp`, `CIMAP.cpp`, `CSFTP.cpp`, `CSCP.cpp` | Over 50+ public member functions repeating identical `try { ... } catch (const std::exception &e) { throw Exception(e.what()); }` blocks. |
+| 7 | **Console & File Stream Redirection** | `CRedirect.hpp`, `CommonUtil.hpp`, `UTCUtility.cpp` | Repeated `std::cout.rdbuf()` saving and buffer swapping logic for stdout/stderr redirection. |
+
+---
+
+## 2. Concrete Shared Architecture & Implementation Specifications
+
+### A. Network Server Credentials Abstraction (`ServerCredentials`)
+
+**File**: [`include/CommonAntik.hpp`](file:///home/robt/projects/antik/include/CommonAntik.hpp)
+
+Encapsulate server connection address and authentication credentials into a single reusable mixin:
 
 ```cpp
 namespace Antik {
-
-// Reusable Server Credentials Mixin
 class ServerCredentials {
 public:
     virtual ~ServerCredentials() = default;
@@ -44,8 +50,21 @@ protected:
     std::string m_userName;
     std::string m_userPassword;
 };
+}
+```
 
-// Reusable I/O Buffer Manager Mixin
+- **Target Inheritors**: [`CFTP`](file:///home/robt/projects/antik/include/CFTP.hpp), [`CIMAP`](file:///home/robt/projects/antik/include/CIMAP.hpp), [`CSMTP`](file:///home/robt/projects/antik/include/CSMTP.hpp), [`CSSHSession`](file:///home/robt/projects/antik/include/CSSHSession.hpp).
+
+---
+
+### B. Centralized I/O Buffer Manager (`IOBufferManager`)
+
+**File**: [`include/CommonAntik.hpp`](file:///home/robt/projects/antik/include/CommonAntik.hpp)
+
+Unified buffer size state and accessor interface:
+
+```cpp
+namespace Antik {
 class IOBufferManager {
 public:
     explicit IOBufferManager(std::uint32_t defaultBufferSize = 32768) : m_ioBufferSize{defaultBufferSize} {}
@@ -57,19 +76,21 @@ public:
 protected:
     std::uint32_t m_ioBufferSize;
 };
-
-// Generic Exception Wrapper Template
-template <typename ExceptionType, typename Func>
-auto wrapException(Func &&func) {
-    try { return func(); }
-    catch (const std::exception &e) { throw ExceptionType(e.what()); }
 }
+```
 
-} // namespace Antik
+- **Target Inheritors**: `CFTP`, `CIMAP`, `CSFTP`, `CSCP`, `CSSHChannel`, `CZIP`.
 
+---
+
+### C. SSH Module Exception Hierarchy (`SSHExceptionBase`)
+
+**File**: [`include/CommonAntik.hpp`](file:///home/robt/projects/antik/include/CommonAntik.hpp)
+
+Unified exception base class for libssh wrapper classes:
+
+```cpp
 namespace Antik::SSH {
-
-// Base class for SSH module exceptions
 class SSHExceptionBase {
 public:
     SSHExceptionBase(const std::string &className, const std::string &functionName, const std::string &errorMessage, int errorCode = 0)
@@ -85,13 +106,18 @@ protected:
     std::string m_errorMessage;
     int m_errorCode{0};
 };
-
-} // namespace Antik::SSH
+}
 ```
+
+- **Target Inheritors**: `CSSHSession::Exception`, `CSSHChannel::Exception`, `CSCP::Exception`, `CSFTP::Exception`.
 
 ---
 
-### B. Shared Base64 Utility ([`include/CommonUtil.hpp`](file:///home/robt/projects/antik/include/CommonUtil.hpp))
+### D. Base64 Processing Utility (`Base64`)
+
+**File**: [`include/CommonUtil.hpp`](file:///home/robt/projects/antik/include/CommonUtil.hpp)
+
+Centralized static Base64 encoding and decoding routines:
 
 ```cpp
 namespace Antik {
@@ -103,9 +129,15 @@ public:
 }
 ```
 
+- **Consumers**: `CSMTP::encodeToBase64`, `CSMTP::decodeFromBase64`, `CMIME::convertMIMEStringToASCII`.
+
 ---
 
-### C. Static Path Utilities ([`include/CPath.hpp`](file:///home/robt/projects/antik/include/CPath.hpp) / [`classes/CPath.cpp`](file:///home/robt/projects/antik/classes/CPath.cpp))
+### E. Server Path Helper Methods (`CPath`)
+
+**File**: [`include/CPath.hpp`](file:///home/robt/projects/antik/include/CPath.hpp) / [`classes/CPath.cpp`](file:///home/robt/projects/antik/classes/CPath.cpp)
+
+Static path manipulation methods:
 
 ```cpp
 namespace Antik::File {
@@ -118,27 +150,29 @@ public:
 }
 ```
 
+- **Consumers**: `FTPUtil.cpp`, `SCPUtil.cpp`, `SFTPUtil.cpp`, `CApprise.cpp`, `CFileEventNotifier.cpp`.
+
 ---
 
-## 3. Implementation Status & Progress
+## 3. Implementation Roadmap & Status
 
-| Phase | Description | Components | Status |
+| Phase | Category | Description | Status |
 |---|---|---|---|
-| **Phase 1** | Server Path Utilities | `CPath::stripTrailingSeparator`, `joinServerPath`, `splitPathComponents` | **COMPLETED** |
-| **Phase 2** | Credential & Buffer Mixins | `ServerCredentials` & `IOBufferManager` in `CFTP`, `CIMAP`, `CSMTP`, `CSFTP`, `CSCP`, `CSSHChannel` | **COMPLETED** |
-| **Phase 3** | Base64 Utility | Extract `Base64::encode` and `Base64::decode` into `CommonUtil.hpp`; refactor `CSMTP` & `CMIME` | **COMPLETED** |
-| **Phase 4** | SSH Exception Base | Extract `SSHExceptionBase` in `CommonAntik.hpp`; inherit in `CSSHSession`, `CSSHChannel`, `CSCP`, `CSFTP` | **COMPLETED** |
-| **Phase 5** | Regression & Coverage | Verify 141 unit tests (`ctest`) and code coverage (`gcov`) | **COMPLETED (100% Pass)** |
+| **Phase 1** | Server Path Utilities | Add `stripTrailingSeparator`, `joinServerPath`, `splitPathComponents` to `CPath`. Refactor `FTPUtil.cpp`. | **COMPLETED** |
+| **Phase 2** | Credential & Buffer Mixins | Implement `ServerCredentials` & `IOBufferManager` in `CommonAntik.hpp`. Inherit in `CFTP`, `CIMAP`, `CSMTP`, `CSFTP`, `CSCP`, `CSSHChannel`. | **COMPLETED** |
+| **Phase 3** | Base64 Utility | Extract `Base64::encode` & `Base64::decode` into `CommonUtil.hpp`. Refactor `CSMTP.cpp` & `CMIME.cpp`. | **COMPLETED** |
+| **Phase 4** | SSH Exception Hierarchy | Extract `SSHExceptionBase` into `CommonAntik.hpp`. Inherit in `CSSHSession`, `CSSHChannel`, `CSCP`, `CSFTP`. | **COMPLETED** |
+| **Phase 5** | Regression Testing | Build project, verify 141 Google Tests (`ctest`), check `gcov` line coverage. | **COMPLETED (100% Pass)** |
 
 ---
 
-## 4. Verification & Testing Commands
+## 4. Verification & Build Commands
 
 ```bash
-# Build static library, unit tests, and all 15 example executables
+# 1. Configure and build project, unit tests, and examples
 cmake -S /home/robt/projects/antik -B /home/robt/projects/antik/build
 cmake --build /home/robt/projects/antik/build
 
-# Run complete unit test suite
+# 2. Run unit test suite
 ctest --test-dir /home/robt/projects/antik/build --output-on-failure
 ```
