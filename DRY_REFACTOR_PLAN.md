@@ -11,8 +11,8 @@ A thorough static analysis of the Antik codebase identified five major areas of 
 1. **Path Construction & Normalization**: Duplicate trailing-slash stripping (`path.pop_back()`), double-slash removal (`find("//")`), and path component splitting across `FTPUtil.cpp`, `SCPUtil.cpp`, `SFTPUtil.cpp`, `CApprise.cpp`, `CFileEventNotifier.cpp`, and `CPath.cpp`.
 2. **Server Account Credentials**: Identical credential data members (`m_userName`, `m_userPassword`, `m_serverName`, `m_serverPort`) and accessors (`setServer`, `setUserAndPassword`, `getUser`, `getServer`, `getPort`) in `CFTP`, `CIMAP`, and `CSMTP`.
 3. **I/O Buffer Sizing & Management**: Duplicate `m_ioBufferSize`, `setIoBufferSize()`, and `getIoBufferSize()` declarations in `CFTP`, `CIMAP`, `CSCP`, `CSFTP`, `CSSHChannel`, and `CZIP`.
-4. **SSH Module Exception Structures**: Identical `Exception` struct declarations (`m_errorCode`, `m_errorMessage`, `m_functionName`, `getMessage()`) duplicated in `CSSHSession.hpp`, `CSSHChannel.hpp`, `CSCP.hpp`, and `CSFTP.hpp`.
-5. **Base64 Processing**: Fragmented Base64 encoding/decoding implementations in `CSMTP.cpp` and `CMIME.cpp`.
+4. **Base64 Processing**: Fragmented Base64 encoding/decoding implementations in `CSMTP.cpp` and `CMIME.cpp`.
+5. **SSH Module Exception Structures**: Identical `Exception` struct declarations (`m_errorCode`, `m_errorMessage`, `m_functionName`, `getMessage()`) duplicated in `CSSHSession.hpp`, `CSSHChannel.hpp`, `CSCP.hpp`, and `CSFTP.hpp`.
 
 ---
 
@@ -70,7 +70,21 @@ auto wrapException(Func &&func) {
 
 ---
 
-### B. Static Path Utilities ([`include/CPath.hpp`](file:///home/robt/projects/antik/include/CPath.hpp) / [`classes/CPath.cpp`](file:///home/robt/projects/antik/classes/CPath.cpp))
+### B. Shared Base64 Utility ([`include/CommonUtil.hpp`](file:///home/robt/projects/antik/include/CommonUtil.hpp))
+
+```cpp
+namespace Antik {
+class Base64 {
+public:
+    static void encode(const std::string &decoding, std::string &encoding, std::uint32_t numberOfBytes);
+    static void decode(const std::string &encoding, std::string &decoding, std::uint32_t numberOfBytes);
+};
+}
+```
+
+---
+
+### C. Static Path Utilities ([`include/CPath.hpp`](file:///home/robt/projects/antik/include/CPath.hpp) / [`classes/CPath.cpp`](file:///home/robt/projects/antik/classes/CPath.cpp))
 
 ```cpp
 namespace Antik::File {
@@ -85,36 +99,13 @@ public:
 
 ---
 
-### C. SSH Module Exception Hierarchy (`SSHException`)
-
-```cpp
-namespace Antik::SSH {
-class SSHException {
-public:
-    SSHException(const std::string &className, const std::string &functionName, const std::string &errorMessage, int errorCode = 0)
-        : m_className{className}, m_functionName{functionName}, m_errorMessage{errorMessage}, m_errorCode{errorCode} {}
-    int getCode() const { return m_errorCode; }
-    std::string getMessage() const {
-        return m_className + " Failure: (" + m_functionName + ") [" + m_errorMessage + "]";
-    }
-protected:
-    std::string m_className;
-    std::string m_functionName;
-    std::string m_errorMessage;
-    int m_errorCode{0};
-};
-}
-```
-
----
-
 ## 3. Implementation Status & Progress
 
 | Phase | Description | Components | Status |
 |---|---|---|---|
 | **Phase 1** | Server Path Utilities | `CPath::stripTrailingSeparator`, `joinServerPath`, `splitPathComponents` | **COMPLETED** |
 | **Phase 2** | Credential & Buffer Mixins | `ServerCredentials` & `IOBufferManager` in `CFTP`, `CIMAP`, `CSMTP`, `CSFTP`, `CSCP`, `CSSHChannel` | **COMPLETED** |
-| **Phase 3** | Base64 Utility | Extract shared `Base64` helper class into `CommonUtil.hpp` | **PLANNED** |
+| **Phase 3** | Base64 Utility | Extract `Base64::encode` and `Base64::decode` into `CommonUtil.hpp`; refactor `CSMTP` & `CMIME` | **COMPLETED** |
 | **Phase 4** | SSH Exception Base | Extract `SSHException` base class for `CSSHSession`, `CSSHChannel`, `CSCP`, `CSFTP` | **PLANNED** |
 | **Phase 5** | Regression & Coverage | Verify 141 unit tests (`ctest`) and code coverage (`gcov`) | **COMPLETED (100% Pass)** |
 

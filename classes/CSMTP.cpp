@@ -12,6 +12,7 @@
 // CLASS DEFINITIONS
 // =================
 #include "CSMTP.hpp"
+#include "CommonUtil.hpp"
 // ====================
 // CLASS IMPLEMENTATION
 // ====================
@@ -361,47 +362,13 @@ namespace Antik::SMTP
     //
     // Encode string to base64 string.
     //
+    //
+    // Encode string to base64 string.
+    //
     void CSMTP::encodeToBase64(const std::string &decoding,
                                std::string &encoding, std::uint32_t numberOfBytes)
     {
-        int trailing, byteIndex = 0;
-        std::uint8_t byte1, byte2, byte3;
-        if (numberOfBytes == 0)
-        {
-            return;
-        }
-        encoding.clear();
-        trailing = (numberOfBytes % 3); // Trailing bytes
-        numberOfBytes /= 3;             // No of 3 byte values to encode
-        while (numberOfBytes--)
-        {
-            byte1 = decoding[byteIndex++];
-            byte2 = decoding[byteIndex++];
-            byte3 = decoding[byteIndex++];
-            encoding.append(1, kCB64[(byte1 & 0xfc) >> 2]);
-            encoding.append(1, kCB64[((byte1 & 0x03) << 4) + ((byte2 & 0xf0) >> 4)]);
-            encoding.append(1, kCB64[((byte2 & 0x0f) << 2) + ((byte3 & 0xc0) >> 6)]);
-            encoding.append(1, kCB64[byte3 & 0x3f]);
-        }
-        // One trailing byte
-        if (trailing == 1)
-        {
-            byte1 = decoding[byteIndex++];
-            encoding.append(1, kCB64[(byte1 & 0xfc) >> 2]);
-            encoding.append(1, kCB64[((byte1 & 0x03) << 4)]);
-            encoding.append(1, '=');
-            encoding.append(1, '=');
-            // Two trailing bytes
-        }
-        else if (trailing == 2)
-        {
-            byte1 = decoding[byteIndex++];
-            byte2 = decoding[byteIndex++];
-            encoding.append(1, kCB64[(byte1 & 0xfc) >> 2]);
-            encoding.append(1, kCB64[((byte1 & 0x03) << 4) + ((byte2 & 0xf0) >> 4)]);
-            encoding.append(1, kCB64[((byte2 & 0x0f) << 2)]);
-            encoding.append(1, '=');
-        }
+        Base64::encode(decoding, encoding, numberOfBytes);
     }
     //
     // Decode string from base64 encoded string.
@@ -409,41 +376,7 @@ namespace Antik::SMTP
     void CSMTP::decodeFromBase64(const std::string &encoding,
                                  std::string &decoding, std::uint32_t numberOfBytes)
     {
-        int byteIndex{0};
-        std::uint8_t byte1, byte2, byte3, byte4;
-        if ((numberOfBytes == 0) || (numberOfBytes % 4))
-        {
-            return;
-        }
-        decoding.clear();
-        numberOfBytes = (numberOfBytes / 4);
-        while (numberOfBytes--)
-        {
-            byte1 = encoding[byteIndex++];
-            byte2 = encoding[byteIndex++];
-            byte3 = encoding[byteIndex++];
-            byte4 = encoding[byteIndex++];
-            byte1 = decodeChar(byte1);
-            byte2 = decodeChar(byte2);
-            if (byte3 == '=')
-            {
-                byte3 = 0;
-                byte4 = 0;
-            }
-            else if (byte4 == '=')
-            {
-                byte3 = decodeChar(byte3);
-                byte4 = 0;
-            }
-            else
-            {
-                byte3 = decodeChar(byte3);
-                byte4 = decodeChar(byte4);
-            }
-            decoding.append(1, ((byte1 << 2) + ((byte2 & 0x30) >> 4)));
-            decoding.append(1, (((byte2 & 0xf) << 4) + ((byte3 & 0x3c) >> 2)));
-            decoding.append(1, (((byte3 & 0x3) << 6) + byte4));
-        }
+        Base64::decode(encoding, decoding, numberOfBytes);
     }
     //
     // Get whole of email message (including headers and encoded attachments).
