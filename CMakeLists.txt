@@ -21,13 +21,7 @@ set(ANTIK_LIBRARY_NAME antik)
 
 include(CTest)
 
-# Add Boost, threads, curl, libssh, openssl, zlib libraries
-
-set(Boost_USE_STATIC_LIBS OFF) 
-set(Boost_USE_MULTITHREADED ON)  
-set(Boost_USE_STATIC_RUNTIME OFF)
-
-find_package(Boost COMPONENTS program_options) 
+# Add threads, curl, libssh, openssl, zlib libraries
 
 find_package(OpenSSL REQUIRED)
 
@@ -52,6 +46,7 @@ set (ANTIK_SOURCES
     ./classes/CIMAPParse.cpp
     ./classes/CMIME.cpp
     ./classes/CPath.cpp
+    ./classes/CProgramOptions.cpp
     ./classes/CRedirect.cpp
     ./classes/CSCP.cpp
     ./classes/CSFTP.cpp
@@ -84,6 +79,7 @@ set (ANTIK_INCLUDES
     ./include/CommonAntik.hpp
     ./include/CommonUtil.hpp
     ./include/CPath.hpp
+    ./include/CProgramOptions.hpp
     ./include/CRedirect.hpp
     ./include/CSCP.hpp
     ./include/CSFTP.hpp
@@ -111,7 +107,7 @@ set (ANTIK_INCLUDES
 
 add_library(${ANTIK_LIBRARY_NAME} STATIC ${ANTIK_SOURCES})
 target_include_directories(${ANTIK_LIBRARY_NAME} PUBLIC ${CMAKE_CURRENT_SOURCE_DIR}/include ${CMAKE_CURRENT_SOURCE_DIR}/classes/implementation)
-target_link_libraries(${ANTIK_LIBRARY_NAME} PRIVATE Boost::program_options Threads::Threads curl OpenSSL::SSL OpenSSL::Crypto ${ZLIB_LIBRARIES} ssh)
+target_link_libraries(${ANTIK_LIBRARY_NAME} PRIVATE Threads::Threads curl OpenSSL::SSL OpenSSL::Crypto ${ZLIB_LIBRARIES} ssh)
 
 add_subdirectory(tests)
 add_subdirectory(examples)
