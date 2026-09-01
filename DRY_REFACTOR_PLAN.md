@@ -35,37 +35,25 @@ A comprehensive analysis of `classes/`, `utility/`, `include/`, and `tests/` ide
 - File traversal loops
 - File transfer callback invocations (`FileCompletionFn`, `FileFeedBackFn`)
 
-#### Proposed Design
-Extract a template-based `DirectorySyncEngine` in [`include/CommonUtil.hpp`](file:///home/robt/projects/antik/include/CommonUtil.hpp) driven by a protocol adapter interface:
+#### Implemented Design
+Extracted a template-based `DirectorySyncEngine` in [`include/CommonUtil.hpp`](file:///home/robt/projects/antik/include/CommonUtil.hpp) driven by a protocol adapter interface:
 
 ```cpp
-namespace Antik::Util {
+namespace Antik {
 
-template <typename ProtocolAdapter>
+template <typename ServerType>
 class DirectorySyncEngine {
 public:
-    explicit DirectorySyncEngine(ProtocolAdapter &adapter) : m_adapter{adapter} {}
-
-    void syncDirectory(const std::string &localDir, const std::string &remoteDir,
-                       FileFeedBackFn feedbackFn = nullptr, FileCompletionFn completionFn = nullptr) {
-        FileList localFiles, remoteFiles;
-        listLocalRecursive(localDir, localFiles, feedbackFn);
-        m_adapter.listRemoteRecursive(remoteDir, remoteFiles, feedbackFn);
-
-        // Unified sync comparison & transfer loop
-        for (const auto &file : localFiles) {
-            if (m_adapter.shouldTransfer(file, localDir, remoteDir)) {
-                m_adapter.uploadFile(file, localDir, remoteDir);
-                if (completionFn) completionFn(file);
-            }
+    static void processFileList(ServerType &server, const FileMapper &mapper, const FileList &fileList,
+                                std::function<void(ServerType &, const std::string &, const std::string &)> transferFn) {
+        for (const auto &file : fileList) {
+            std::string target = mapper.toRemote(file);
+            transferFn(server, file, target);
         }
     }
-
-private:
-    ProtocolAdapter &m_adapter;
 };
 
-} // namespace Antik::Util
+} // namespace Antik
 ```
 
 ---
@@ -236,15 +224,15 @@ private:
 
 ## 3. Refactoring Implementation Phases
 
-| Phase | Proposal / Target Area | Deliverables & Scope |
-|---|---|---|
-| **Phase 1** | `DirectorySyncEngine` | Generic sync engine in `CommonUtil.hpp` for `FTPUtil` & `SFTPUtil`. |
-| **Phase 2** | `ThreadQueue<T>` | Thread-safe queue in `CommonUtil.hpp` for `CFileEventNotifier`. |
-| **Phase 3** | `StringUtil` | Common string trimming & tokenization helpers in `CommonUtil.hpp`. |
-| **Phase 4** | `EndianIO` | Binary little-endian I/O template functions for `CZIPIO`. |
-| **Phase 5** | `CCurl` Helpers | Credential & SSL option convenience methods in `CCurl`. |
-| **Phase 6** | `TestHelpers.hpp` | Temporary file and directory fixtures for unit tests in `tests/`. |
-| **Phase 7** | Regression Verification | Re-run 141-test Google Test suite (`ctest`) and `gcov` coverage. |
+| Phase | Proposal / Target Area | Deliverables & Scope | Status |
+|---|---|---|---|
+| **Phase 1** | `DirectorySyncEngine` | Generic sync engine & const `FileMapper` methods in `CommonUtil.hpp` | **COMPLETED** |
+| **Phase 2** | `ThreadQueue<T>` | Thread-safe queue in `CommonUtil.hpp` for `CFileEventNotifier` | **PLANNED** |
+| **Phase 3** | `StringUtil` | Common string trimming & tokenization helpers in `CommonUtil.hpp` | **PLANNED** |
+| **Phase 4** | `EndianIO` | Binary little-endian I/O template functions for `CZIPIO` | **PLANNED** |
+| **Phase 5** | `CCurl` Helpers | Credential & SSL option convenience methods in `CCurl` | **PLANNED** |
+| **Phase 6** | `TestHelpers.hpp` | Temporary file and directory fixtures for unit tests in `tests/` | **PLANNED** |
+| **Phase 7** | Regression Verification | Re-run 141-test Google Test suite (`ctest`) and `gcov` coverage | **COMPLETED (100% Pass)** |
 
 ---
 

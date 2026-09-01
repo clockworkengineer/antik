@@ -35,18 +35,16 @@ namespace Antik
     public:
         explicit FileMapper(const std::string &localDirectory, const std::string &remoteDirectory) : m_localDirectory{localDirectory}, m_remoteDirectory{remoteDirectory}
         {
-            if (m_localDirectory.back() == kServerPathSep)
-                m_localDirectory.pop_back();
-            if (m_remoteDirectory.back() == kServerPathSep)
-                m_remoteDirectory.pop_back();
+            File::CPath::stripTrailingSeparator(m_localDirectory);
+            File::CPath::stripTrailingSeparator(m_remoteDirectory);
         }
-        std::string toLocal(const std::string &filePath)
+        std::string toLocal(const std::string &filePath) const
         {
             File::CPath localPath{m_localDirectory + kServerPathSep + filePath.substr(m_remoteDirectory.size())};
             localPath.normalize();
             return (localPath.toString());
         }
-        std::string toRemote(const std::string &filePath)
+        std::string toRemote(const std::string &filePath) const
         {
             File::CPath remotePath{m_remoteDirectory + kServerPathSep + filePath.substr(m_localDirectory.size())};
             remotePath.normalize();
@@ -64,6 +62,24 @@ namespace Antik
     private:
         std::string m_localDirectory;
         std::string m_remoteDirectory;
+    };
+
+    //
+    // Synchronization & transfer engine helper
+    //
+    template <typename ServerType>
+    class DirectorySyncEngine
+    {
+    public:
+        static void processFileList(ServerType &server, const FileMapper &mapper, const FileList &fileList,
+                                    std::function<void(ServerType &, const std::string &, const std::string &)> transferFn)
+        {
+            for (const auto &file : fileList)
+            {
+                std::string target = mapper.toRemote(file);
+                transferFn(server, file, target);
+            }
+        }
     };
     //
     // Recursively parse a local directory and produce a list of files. (static for moment)
