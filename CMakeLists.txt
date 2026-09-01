@@ -17,7 +17,7 @@ set(ANTIK_LIBRARY_NAME antik)
 
 # Enable unit tests
 
-enable_testing()
+include(CTest)
 
 # Add Boost, threads, curl, libssh, openssl, zlib libraries
 
