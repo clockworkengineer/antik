@@ -60,3 +60,11 @@ TEST(UTCCCurl, GlobalCleanup)
 {
     EXPECT_NO_THROW(CCurl::globalCleanup());
 }
+
+TEST(UTCCCurl, HelperMethods)
+{
+    CCurl curl;
+    EXPECT_NO_THROW(curl.setCredentials("testuser", "testpass"));
+    EXPECT_NO_THROW(curl.setSSLVerification(false, false));
+    EXPECT_NO_THROW(curl.setTimeouts(5L, 30L));
+}

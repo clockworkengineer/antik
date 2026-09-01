@@ -143,28 +143,26 @@ public:
 
 ### Proposal 6: Shared Unit Test Helpers & Fixtures (`tests/TestHelpers.hpp`)
 
-#### Problem
-Unit test files in `tests/` (`UTCCCurl.cpp`, `UTCFTP.cpp`, `UTCIMAP.cpp`, `UTCSMTP.cpp`, `UTCSSH.cpp`) duplicate temporary test file creation and test directory setup.
-
-#### Proposed Design
-Create [`tests/TestHelpers.hpp`](file:///home/robt/projects/antik/tests/TestHelpers.hpp):
+#### Implemented Design
+Created [`tests/TestHelpers.hpp`](file:///home/robt/projects/antik/tests/TestHelpers.hpp):
 
 ```cpp
 namespace Antik::Test {
 
 class TempTestFile {
 public:
-    explicit TempTestFile(const std::string &filename, const std::string &content = "Test Content")
-        : m_filepath(filename) {
-        std::ofstream ofs(m_filepath);
-        ofs << content;
-    }
-    ~TempTestFile() {
-        std::filesystem::remove(m_filepath);
-    }
-    std::string getPath() const { return m_filepath; }
-private:
-    std::string m_filepath;
+    explicit TempTestFile(const std::string &filename, const std::string &content = "Test Content");
+    ~TempTestFile();
+    std::string getPath() const;
+    bool exists() const;
+};
+
+class TempTestDir {
+public:
+    explicit TempTestDir(const std::string &dirpath);
+    ~TempTestDir();
+    std::string getPath() const;
+    bool exists() const;
 };
 
 } // namespace Antik::Test
@@ -181,8 +179,8 @@ private:
 | **Phase 3** | `StringUtil` | Common string trimming & tokenization helpers in `CommonUtil.hpp` | **COMPLETED** |
 | **Phase 4** | `EndianIO` | Binary little-endian I/O template functions for `CZIPIO` | **COMPLETED** |
 | **Phase 5** | `CCurl` Helpers | Credential & SSL option convenience methods in `CCurl` | **COMPLETED** |
-| **Phase 6** | `TestHelpers.hpp` | Temporary file and directory fixtures for unit tests in `tests/` | **PLANNED** |
-| **Phase 7** | Regression Verification | Re-run 141-test Google Test suite (`ctest`) and `gcov` coverage | **COMPLETED (100% Pass)** |
+| **Phase 6** | `TestHelpers.hpp` | Temporary file and directory fixtures for unit tests in `tests/` | **COMPLETED** |
+| **Phase 7** | Regression Verification | Re-run 142-test Google Test suite (`ctest`) and `gcov` coverage | **COMPLETED (100% Pass)** |
 
 ---
 
