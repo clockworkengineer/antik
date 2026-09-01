@@ -124,4 +124,60 @@ namespace Antik::File
     {
         return (std::filesystem::current_path().string());
     }
+    //
+    // Strip trailing path separator if present
+    //
+    void CPath::stripTrailingSeparator(std::string &path)
+    {
+        if (!path.empty() && path.back() == kServerPathSep)
+        {
+            path.pop_back();
+        }
+    }
+    //
+    // Join server path components and remove consecutive separators
+    //
+    std::string CPath::joinServerPath(const std::string &currentWorkingDirectory, const std::string &remotePath, const std::string &remoteFileName)
+    {
+        std::string result{currentWorkingDirectory + kServerPathSep + remotePath};
+        if (!remoteFileName.empty())
+        {
+            result += kServerPathSep + remoteFileName;
+        }
+        std::string::size_type i{0};
+        while ((i = result.find(std::string(2, kServerPathSep))) != std::string::npos)
+        {
+            result.erase(result.begin() + i);
+        }
+        stripTrailingSeparator(result);
+        return result;
+    }
+    //
+    // Split path into individual directory components
+    //
+    std::vector<std::string> CPath::splitPathComponents(const std::string &path)
+    {
+        std::vector<std::string> components;
+        std::string current;
+        for (char ch : path)
+        {
+            if (ch == kServerPathSep)
+            {
+                if (!current.empty())
+                {
+                    components.push_back(current);
+                    current.clear();
+                }
+            }
+            else
+            {
+                current += ch;
+            }
+        }
+        if (!current.empty())
+        {
+            components.push_back(current);
+        }
+        return components;
+    }
 } // namespace Antik::File

@@ -50,15 +50,7 @@ namespace Antik ::FTP
     //
     static std::string constructRemotePathName(const std::string &currentWorkingDirectory, const std::string &remotePath, const std::string &remoteFileName)
     {
-        std::string remoteDirectoryPath{currentWorkingDirectory + kServerPathSep + remotePath + kServerPathSep + remoteFileName};
-        std::string::size_type i{0};
-        while ((i = remoteDirectoryPath.find(std::string(2, kServerPathSep))) != std::string::npos)
-        {
-            remoteDirectoryPath.erase(remoteDirectoryPath.begin() + i);
-        }
-        if (remoteDirectoryPath.back() == kServerPathSep)
-            remoteDirectoryPath.pop_back();
-        return (remoteDirectoryPath);
+        return CPath::joinServerPath(currentWorkingDirectory, remotePath, remoteFileName);
     }
     //
     // Construct a remote path name from value returned from server list command. This may or may no have

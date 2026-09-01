@@ -22,7 +22,7 @@ namespace Antik::SSH
     // ================
     // CLASS DEFINITION
     // ================
-    class CSSHChannel
+    class CSSHChannel : public IOBufferManager
     {
     public:
         // ==========================

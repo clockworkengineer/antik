@@ -54,6 +54,9 @@ namespace Antik::File
         void normalize(void);
         std::string absolutePath(void);
         static std::string currentPath(void);
+        static void stripTrailingSeparator(std::string &path);
+        static std::string joinServerPath(const std::string &currentWorkingDirectory, const std::string &remotePath, const std::string &remoteFileName = "");
+        static std::vector<std::string> splitPathComponents(const std::string &path);
         // ================
         // PUBLIC VARIABLES
         // ================

@@ -90,7 +90,7 @@ namespace Antik::IMAP
     // ================
     // CLASS DEFINITION
     // ================
-    class CIMAP
+    class CIMAP : public ServerCredentials, public IOBufferManager
     {
     public:
         // ==========================

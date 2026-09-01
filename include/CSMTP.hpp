@@ -21,7 +21,7 @@ namespace Antik::SMTP
     // ================
     // CLASS DEFINITION
     // ================
-    class CSMTP
+    class CSMTP : public ServerCredentials
     {
     public:
         // ==========================

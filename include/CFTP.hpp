@@ -26,7 +26,7 @@ namespace Antik::FTP
     // ================
     // CLASS DEFINITION
     // ================
-    class CFTP
+    class CFTP : public ServerCredentials, public IOBufferManager
     {
     public:
         // ==========================

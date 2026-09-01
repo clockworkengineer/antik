@@ -26,7 +26,7 @@ namespace Antik::SSH
     // ================
     // CLASS DEFINITION
     // ================
-    class CSCP
+    class CSCP : public IOBufferManager
     {
     public:
         // ==========================
