@@ -20,15 +20,8 @@ namespace Antik::File
     class IFileEventNotifier
     {
     public:
-        // ==========================
-        // PUBLIC TYPES AND CONSTANTS
-        // ==========================
-        // ============
-        // CONSTRUCTORS
-        // ============
-        // ==============
-        // PUBLIC METHODS
-        // ==============
+        virtual ~IFileEventNotifier() = default;
+
         //
         // Event queue
         //
@@ -42,27 +35,23 @@ namespace Antik::File
         //
         virtual void addWatch(const std::string &filePath) = 0;    // Add path to be watched
         virtual void removeWatch(const std::string &filePath) = 0; // Remove path being watched
-        virtual void setWatchDepth(int watchDepth) = 0;            // Set maximum watch depth
+        virtual void setWatchDepth(int watchDepth)                 // Set maximum watch depth (LSP default)
+        {
+            (void)watchDepth;
+        }
         //
         // Get any thrown exceptions
         //
         virtual std::exception_ptr getThrownException() const = 0;
-        // ================
-        // PUBLIC VARIABLES
-        // ================
-    private:
-        // ===========================
-        // PRIVATE TYPES AND CONSTANTS
-        // ===========================
-        // ===========================================
-        // DISABLED CONSTRUCTORS/DESTRUCTORS/OPERATORS
-        // ===========================================
-        // ===============
-        // PRIVATE METHODS
-        // ===============
-        // =================
-        // PRIVATE VARIABLES
-        // =================
+    };
+
+    //
+    // Extended Watchable Event Notifier Interface (LSP compliance)
+    //
+    class IWatchableEventNotifier : public IFileEventNotifier
+    {
+    public:
+        virtual ~IWatchableEventNotifier() = default;
     };
 } // namespace Antik::File
 #endif /* IFILEEVENTNOTIFIER_HPP */

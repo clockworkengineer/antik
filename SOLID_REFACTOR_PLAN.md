@@ -122,8 +122,8 @@ public:
 
 ### L — Liskov Substitution Principle (LSP)
 
-#### Proposed Design
-Separate general event polling (`IFileEventNotifier`) from directory watch configuration (`IWatchableEventNotifier`).
+#### Implemented Design
+Refactored `IFileEventNotifier` ([`classes/implementation/IFileEventNotifier.hpp`](file:///home/robt/projects/antik/classes/implementation/IFileEventNotifier.hpp)) to provide default virtual behavior for `setWatchDepth` and introduced `IWatchableEventNotifier` for explicit watcher specialization.
 
 ---
 
@@ -147,7 +147,7 @@ Separate general event polling (`IFileEventNotifier`) from directory watch confi
 | P4    | Dependency Inversion (DIP)  | Introduce ISSHSession & inject    | COMPLETED        |
 |       |                             | into CSSHSession.                 |                  |
 +-------+-----------------------------+-----------------------------------+------------------+
-| P5    | Liskov Substitution (LSP)   | Refactor IFileEventNotifier and   | Ready for Action |
+| P5    | Liskov Substitution (LSP)   | Refactor IFileEventNotifier and   | COMPLETED        |
 |       |                             | IWatchableEventNotifier.          |                  |
 +-------+-----------------------------+-----------------------------------+------------------+
 | P6    | Regression & Verification   | Re-run 141-test suite (`ctest`)   | COMPLETED        |
