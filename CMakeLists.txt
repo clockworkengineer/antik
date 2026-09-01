@@ -105,6 +105,7 @@ target_include_directories(${ANTIK_LIBRARY_NAME} PUBLIC ${CMAKE_CURRENT_SOURCE_D
 target_link_libraries(${ANTIK_LIBRARY_NAME} PRIVATE Boost::program_options Threads::Threads curl OpenSSL::SSL OpenSSL::Crypto ${ZLIB_LIBRARIES} ssh)
 
 add_subdirectory(tests)
+add_subdirectory(examples)
 
 install(TARGETS ${ANTIK_LIBRARY_NAME} DESTINATION ${ANTIK_LIBRARY_NAME}/lib)
 install(FILES ${ANTIK_INCLUDES} DESTINATION ${ANTIK_LIBRARY_NAME}/include)
