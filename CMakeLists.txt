@@ -12,6 +12,8 @@ if(ENABLE_COVERAGE)
 endif()
 
 set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} -Werror -Wall -Wextra -Wno-error=deprecated-declarations")
+set(CMAKE_CXX_VISIBILITY_PRESET hidden)
+set(CMAKE_VISIBILITY_INLINES_HIDDEN ON)
 
 set(ANTIK_LIBRARY_NAME antik)
 

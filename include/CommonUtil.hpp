@@ -169,33 +169,33 @@ namespace Antik
     class StringUtil
     {
     public:
-        static std::string trim(const std::string &str)
+        static std::string trim(std::string_view str)
         {
             auto start = str.find_first_not_of(" \t\n\r\f\v");
-            if (start == std::string::npos) return "";
+            if (start == std::string_view::npos) return "";
             auto end = str.find_last_not_of(" \t\n\r\f\v");
-            return str.substr(start, end - start + 1);
+            return std::string(str.substr(start, end - start + 1));
         }
 
-        static std::string stripQuotes(const std::string &str)
+        static std::string stripQuotes(std::string_view str)
         {
             if (str.size() >= 2 && str.front() == '"' && str.back() == '"')
             {
-                return str.substr(1, str.size() - 2);
+                return std::string(str.substr(1, str.size() - 2));
             }
-            return str;
+            return std::string(str);
         }
 
-        static std::string stripOuterParens(const std::string &str)
+        static std::string stripOuterParens(std::string_view str)
         {
             if (str.size() >= 2 && str.front() == '(' && str.back() == ')')
             {
-                return str.substr(1, str.size() - 2);
+                return std::string(str.substr(1, str.size() - 2));
             }
-            return str;
+            return std::string(str);
         }
 
-        static bool equalsIgnoreCase(const std::string &a, const std::string &b)
+        static bool equalsIgnoreCase(std::string_view a, std::string_view b)
         {
             if (a.size() != b.size()) return false;
             return std::equal(a.begin(), a.end(), b.begin(), [](char c1, char c2) {
@@ -203,7 +203,7 @@ namespace Antik
             });
         }
 
-        static bool startsWithIgnoreCase(const std::string &str, const std::string &prefix)
+        static bool startsWithIgnoreCase(std::string_view str, std::string_view prefix)
         {
             if (str.size() < prefix.size()) return false;
             return std::equal(prefix.begin(), prefix.end(), str.begin(), [](char c1, char c2) {

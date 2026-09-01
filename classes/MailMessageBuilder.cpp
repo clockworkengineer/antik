@@ -109,6 +109,7 @@ namespace Antik::SMTP
     std::vector<std::string> MailMessageBuilder::buildPayload()
     {
         std::vector<std::string> payload;
+        payload.reserve(32 + m_mailMessage.size() + m_attachedFiles.size() * 16);
         bool hasAttachments{!m_attachedFiles.empty()};
         payload.emplace_back("Date: " + currentDateAndTime() + kEOL);
         payload.emplace_back("To: " + m_addressTo + kEOL);
