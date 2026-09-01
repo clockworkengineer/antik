@@ -63,46 +63,24 @@ public:
 #### Problem
 `CFileEventNotifier.cpp` manually manages thread synchronization, condition variables (`m_queuedEventsWaiting`), mutex locks (`m_queuedEventsLock`), and atomic flags (`m_doWork`) inside `getNextEvent` and `stopEventGeneration`.
 
-#### Proposed Design
-Create a reusable thread-safe queue template in [`include/CommonUtil.hpp`](file:///home/robt/projects/antik/include/CommonUtil.hpp):
+#### Implemented Design
+Created a reusable thread-safe queue template in [`include/CommonUtil.hpp`](file:///home/robt/projects/antik/include/CommonUtil.hpp):
 
 ```cpp
-namespace Antik::Util {
+namespace Antik {
 
 template <typename T>
 class ThreadQueue {
 public:
-    void push(T item) {
-        std::lock_guard<std::mutex> lock(m_mutex);
-        if (!m_stopped) {
-            m_queue.push(std::move(item));
-            m_cv.notify_one();
-        }
-    }
-
-    bool pop(T &item) {
-        std::unique_lock<std::mutex> lock(m_mutex);
-        m_cv.wait(lock, [this] { return !m_queue.empty() || m_stopped; });
-        if (m_queue.empty() || m_stopped) return false;
-        item = std::move(m_queue.front());
-        m_queue.pop();
-        return true;
-    }
-
-    void stop() {
-        std::lock_guard<std::mutex> lock(m_mutex);
-        m_stopped = true;
-        m_cv.notify_all();
-    }
-
-private:
-    std::queue<T> m_queue;
-    std::mutex m_mutex;
-    std::condition_variable m_cv;
-    bool m_stopped{false};
+    void push(T item);
+    bool pop(T &item, const std::function<bool()> &stopCondition = nullptr);
+    void notifyAll();
+    void clear();
+    bool empty() const;
+    std::size_t size() const;
 };
 
-} // namespace Antik::Util
+} // namespace Antik
 ```
 
 ---
@@ -227,7 +205,7 @@ private:
 | Phase | Proposal / Target Area | Deliverables & Scope | Status |
 |---|---|---|---|
 | **Phase 1** | `DirectorySyncEngine` | Generic sync engine & const `FileMapper` methods in `CommonUtil.hpp` | **COMPLETED** |
-| **Phase 2** | `ThreadQueue<T>` | Thread-safe queue in `CommonUtil.hpp` for `CFileEventNotifier` | **PLANNED** |
+| **Phase 2** | `ThreadQueue<T>` | Thread-safe queue in `CommonUtil.hpp` for `CFileEventNotifier` | **COMPLETED** |
 | **Phase 3** | `StringUtil` | Common string trimming & tokenization helpers in `CommonUtil.hpp` | **PLANNED** |
 | **Phase 4** | `EndianIO` | Binary little-endian I/O template functions for `CZIPIO` | **PLANNED** |
 | **Phase 5** | `CCurl` Helpers | Credential & SSL option convenience methods in `CCurl` | **PLANNED** |

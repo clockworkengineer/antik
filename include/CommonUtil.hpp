@@ -7,6 +7,9 @@
 // C++ STL
 //
 #include <filesystem>
+#include <mutex>
+#include <condition_variable>
+#include <queue>
 //
 // Antik classes
 //
@@ -95,6 +98,66 @@ namespace Antik
             }
         }
     }
+
+    //
+    // Thread-safe event queue wrapper
+    //
+    template <typename T>
+    class ThreadQueue
+    {
+    public:
+        void push(T item)
+        {
+            std::lock_guard<std::mutex> lock(m_mutex);
+            m_queue.push(std::move(item));
+            m_cv.notify_one();
+        }
+
+        bool pop(T &item, const std::function<bool()> &stopCondition = nullptr)
+        {
+            std::unique_lock<std::mutex> lock(m_mutex);
+            m_cv.wait(lock, [&]() {
+                return !m_queue.empty() || (stopCondition && stopCondition());
+            });
+            if (!m_queue.empty())
+            {
+                item = std::move(m_queue.front());
+                m_queue.pop();
+                return true;
+            }
+            return false;
+        }
+
+        void notifyAll()
+        {
+            std::lock_guard<std::mutex> lock(m_mutex);
+            m_cv.notify_all();
+        }
+
+        void clear()
+        {
+            std::lock_guard<std::mutex> lock(m_mutex);
+            std::queue<T> emptyQueue;
+            std::swap(m_queue, emptyQueue);
+        }
+
+        bool empty() const
+        {
+            std::lock_guard<std::mutex> lock(m_mutex);
+            return m_queue.empty();
+        }
+
+        std::size_t size() const
+        {
+            std::lock_guard<std::mutex> lock(m_mutex);
+            return m_queue.size();
+        }
+
+    private:
+        mutable std::mutex m_mutex;
+        std::condition_variable m_cv;
+        std::queue<T> m_queue;
+    };
 
     //
     // Base64 encoding/decoding utility
