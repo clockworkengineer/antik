@@ -54,6 +54,7 @@ set (ANTIK_SOURCES
     ./classes/CSCP.cpp
     ./classes/CSFTP.cpp
     ./classes/CSMTP.cpp
+    ./classes/MailMessageBuilder.cpp
     ./classes/CSocket.cpp
     ./classes/CSSHChannel.cpp
     ./classes/CSSHSession.cpp
@@ -84,6 +85,7 @@ set (ANTIK_INCLUDES
     ./include/CSCP.hpp
     ./include/CSFTP.hpp
     ./include/CSMTP.hpp
+    ./include/MailMessageBuilder.hpp
     ./include/CSocket.hpp
     ./include/CSSHChannel.hpp
     ./include/CSSHSession.hpp
