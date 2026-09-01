@@ -43,24 +43,17 @@ namespace Antik::SSH
         //
         // Class exception
         //
-        struct Exception
+        struct Exception : public SSHExceptionBase
         {
-            Exception(CSFTP &sftp, const std::string &functionName) : m_errorCode{sftp.getSession().getErrorCode()},
-                                                                      m_errorMessage{sftp.getSession().getError()}, m_sftpErrorCode{sftp.getErrorCode()},
-                                                                      m_functionName{functionName}
+            Exception(CSFTP &sftp, const std::string &functionName)
+                : SSHExceptionBase("CSFTP", functionName, sftp.getSession().getError(), sftp.getSession().getErrorCode()),
+                  m_sftpErrorCode{sftp.getErrorCode()}
             {
             }
-            Exception(const std::string &errorMessage, const std::string &functionName) : m_errorMessage{errorMessage},
-                                                                                          m_functionName{functionName}
+            Exception(const std::string &errorMessage, const std::string &functionName)
+                : SSHExceptionBase("CSFTP", functionName, errorMessage),
+                  m_sftpErrorCode{0}
             {
-            }
-            int getCode() const
-            {
-                return m_errorCode;
-            }
-            std::string getMessage() const
-            {
-                return static_cast<std::string>("CSFTP Failure: (") + m_functionName + ") [" + m_errorMessage + "]";
             }
             int sftpGetCode() const
             {
@@ -68,10 +61,7 @@ namespace Antik::SSH
             }
 
         private:
-            int m_errorCode{SSH_OK};        // SSH error code
-            std::string m_errorMessage;     // SSH error message
-            int m_sftpErrorCode{SSH_FX_OK}; // SFTP error code
-            std::string m_functionName;     // Current function name
+            int m_sftpErrorCode{0};
         };
         //
         // Custom deleter for re-mapped libssh sftp data structures.
