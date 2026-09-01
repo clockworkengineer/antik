@@ -51,6 +51,43 @@ namespace Antik::File
             std::string message; // Event file name / error message string
         };
         //
+        // Segregated Interfaces (ISP Compliance)
+        //
+        class IEventListener
+        {
+        public:
+            virtual ~IEventListener() = default;
+            virtual void getNextEvent(IApprise::Event &message) = 0;
+            virtual std::exception_ptr getThrownException(void) = 0;
+        };
+
+        class IWatchControl
+        {
+        public:
+            virtual ~IWatchControl() = default;
+            virtual void startWatching(bool clearQueue) = 0;
+            virtual void stopWatching(void) = 0;
+            virtual bool stillWatching(void) = 0;
+        };
+
+        class IWatchTargetManager
+        {
+        public:
+            virtual ~IWatchTargetManager() = default;
+            virtual void addWatch(const std::string &filePath) = 0;
+            virtual void removeWatch(const std::string &filePath) = 0;
+        };
+
+        //
+        // Composite IApprise Interface
+        //
+        class IAppriseComposite : public IEventListener, public IWatchControl, public IWatchTargetManager
+        {
+        public:
+            virtual ~IAppriseComposite() = default;
+        };
+
+        //
         // Event control
         //
         virtual void startWatching(bool clearQueue) = 0;

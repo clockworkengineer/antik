@@ -84,17 +84,21 @@ public:
 
 ---
 
+### I — Interface Segregation Principle (ISP)
+
+#### Implemented Design
+Segregated `IApprise` in [`include/IApprise.hpp`](file:///home/robt/projects/antik/include/IApprise.hpp) into lean, role-specific interfaces:
+- `IEventListener`: Event retrieval and exception access.
+- `IWatchControl`: Watch state control (`startWatching`, `stopWatching`, `stillWatching`).
+- `IWatchTargetManager`: Path registration (`addWatch`, `removeWatch`).
+- `IAppriseComposite`: Composite interface inheriting all segregated roles.
+
+---
+
 ### L — Liskov Substitution Principle (LSP)
 
 #### Proposed Design
 Separate general event polling (`IFileEventNotifier`) from directory watch configuration (`IWatchableEventNotifier`).
-
----
-
-### I — Interface Segregation Principle (ISP)
-
-#### Proposed Design
-Segregate `IApprise` into `IEventListener` and `INotificationDispatcher`.
 
 ---
 
@@ -119,8 +123,8 @@ Introduce `ISSHSession` and `INetworkClient` interfaces implemented by `CSSHSess
 | P2    | Open/Closed (OCP)           | Define IRemoteFileSystem.         | COMPLETED        |
 |       |                             | Implement in CFTP, CSFTP, CSCP.   |                  |
 +-------+-----------------------------+-----------------------------------+------------------+
-| P3    | Interface Segregation (ISP) | Segregate IApprise into           | Ready for Action |
-|       |                             | IEventListener & IDispatcher.     |                  |
+| P3    | Interface Segregation (ISP) | Segregate IApprise into           | COMPLETED        |
+|       |                             | IEventListener & IWatchControl.   |                  |
 +-------+-----------------------------+-----------------------------------+------------------+
 | P4    | Dependency Inversion (DIP)  | Introduce ISSHSession & inject    | Ready for Action |
 |       |                             | into CSFTP and CSCP.              |                  |
