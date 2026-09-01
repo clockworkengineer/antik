@@ -36,7 +36,7 @@ namespace Antik::SSH
     // ================
     // CLASS DEFINITION
     // ================
-    class CSFTP : public IOBufferManager, public Network::IRemoteFileSystem
+    class CSFTP final : public IOBufferManager, public Network::IRemoteFileSystem
     {
     public:
         // ==========================

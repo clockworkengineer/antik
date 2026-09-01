@@ -9,7 +9,7 @@ namespace Antik::Network
     //
     // WebDAV Remote File System Provider (inherits IRemoteFileSystem)
     //
-    class CWebDAV : public IRemoteFileSystem, public ServerCredentials
+    class CWebDAV final : public IRemoteFileSystem, public ServerCredentials
     {
     public:
         CWebDAV();
