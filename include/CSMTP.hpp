@@ -7,6 +7,7 @@
 #include <vector>
 #include <stdexcept>
 #include <deque>
+#include <cstdint>
 //
 // Antik classes
 //

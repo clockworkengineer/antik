@@ -322,6 +322,14 @@ namespace Antik::FTP
         m_serverName = serverName;
         m_serverPort = serverPort;
     }
+    std::string CFTP::getServer(void) const
+    {
+        return m_serverName;
+    }
+    std::string CFTP::getUser(void) const
+    {
+        return m_userName;
+    }
     //
     // Get current connection status with server
     //

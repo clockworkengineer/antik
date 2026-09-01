@@ -9,6 +9,7 @@
 #include <iostream>
 #include <thread>
 #include <functional>
+#include <cstdint>
 //
 // Antik utility
 //

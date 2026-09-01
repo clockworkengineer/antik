@@ -3,6 +3,7 @@
 //
 // C++ STL
 //
+#include <memory>
 #include <stdexcept>
 #include <thread>
 //

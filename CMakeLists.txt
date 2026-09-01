@@ -5,7 +5,13 @@ project("Antik C++ Library" VERSION 0.1.0 DESCRIPTION "Antik C++ Static Library"
 set(CMAKE_CXX_STANDARD 17)
 set(CMAKE_CXX_STANDARD_REQUIRED ON)
 
-set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} -Werror -Wall -Wextra")
+option(ENABLE_COVERAGE "Enable code coverage testing" ON)
+
+if(ENABLE_COVERAGE)
+    set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} --coverage")
+endif()
+
+set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} -Werror -Wall -Wextra -Wno-error=deprecated-declarations")
 
 set(ANTIK_LIBRARY_NAME antik)
 
@@ -100,6 +106,6 @@ target_link_libraries(${ANTIK_LIBRARY_NAME} PRIVATE Boost::program_options Threa
 
 add_subdirectory(tests)
 
-install(TARGETS ${PROJECT_NANTIK_LIBRARY} DESTINATION ${ANTIK_LIBRARY_NAME}/lib)
+install(TARGETS ${ANTIK_LIBRARY_NAME} DESTINATION ${ANTIK_LIBRARY_NAME}/lib)
 install(FILES ${ANTIK_INCLUDES} DESTINATION ${ANTIK_LIBRARY_NAME}/include)
 
