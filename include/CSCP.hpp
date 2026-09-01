@@ -35,29 +35,16 @@ namespace Antik::SSH
         //
         // Class exception
         //
-        struct Exception
+        struct Exception : public SSHExceptionBase
         {
-            Exception(CSCP &scp, const std::string functionName) : m_errorCode{scp.getSession().getErrorCode()},
-                                                                   m_errorMessage{scp.getSession().getError()}, m_functionName{functionName}
+            Exception(CSCP &scp, const std::string functionName)
+                : SSHExceptionBase("CSCP", functionName, scp.getSession().getError(), scp.getSession().getErrorCode())
             {
             }
-            Exception(const std::string &errorMessage, const std::string &functionName) : m_errorMessage{errorMessage},
-                                                                                          m_functionName{functionName}
+            Exception(const std::string &errorMessage, const std::string &functionName)
+                : SSHExceptionBase("CSCP", functionName, errorMessage)
             {
             }
-            int getCode() const
-            {
-                return m_errorCode;
-            }
-            std::string getMessage() const
-            {
-                return static_cast<std::string>("CSCP Failure: (") + m_functionName + ") [" + m_errorMessage + "]";
-            }
-
-        private:
-            int m_errorCode{SSH_OK};    // SSH error code
-            std::string m_errorMessage; // SSH error message
-            std::string m_functionName; // Current function name
         };
         //
         // Re-map some linux types used (possibly make these more abstract at a later date).

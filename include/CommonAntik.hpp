@@ -77,4 +77,37 @@ namespace Antik
         }
     }
 } // namespace Antik
+
+namespace Antik::SSH
+{
+    //
+    // Base class for SSH module exceptions
+    //
+    class SSHExceptionBase
+    {
+    public:
+        SSHExceptionBase(const std::string &className, const std::string &functionName, const std::string &errorMessage, int errorCode = 0)
+            : m_className{className}, m_functionName{functionName}, m_errorMessage{errorMessage}, m_errorCode{errorCode}
+        {
+        }
+
+        virtual ~SSHExceptionBase() = default;
+
+        int getCode() const
+        {
+            return m_errorCode;
+        }
+
+        std::string getMessage() const
+        {
+            return m_className + " Failure: (" + m_functionName + ") [" + m_errorMessage + "]";
+        }
+
+    protected:
+        std::string m_className;
+        std::string m_functionName;
+        std::string m_errorMessage;
+        int m_errorCode{0};
+    };
+} // namespace Antik::SSH
 #endif /* COMMON_HPP */

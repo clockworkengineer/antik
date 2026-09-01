@@ -66,6 +66,27 @@ auto wrapException(Func &&func) {
 }
 
 } // namespace Antik
+
+namespace Antik::SSH {
+
+// Base class for SSH module exceptions
+class SSHExceptionBase {
+public:
+    SSHExceptionBase(const std::string &className, const std::string &functionName, const std::string &errorMessage, int errorCode = 0)
+        : m_className{className}, m_functionName{functionName}, m_errorMessage{errorMessage}, m_errorCode{errorCode} {}
+    virtual ~SSHExceptionBase() = default;
+    int getCode() const { return m_errorCode; }
+    std::string getMessage() const {
+        return m_className + " Failure: (" + m_functionName + ") [" + m_errorMessage + "]";
+    }
+protected:
+    std::string m_className;
+    std::string m_functionName;
+    std::string m_errorMessage;
+    int m_errorCode{0};
+};
+
+} // namespace Antik::SSH
 ```
 
 ---
@@ -106,7 +127,7 @@ public:
 | **Phase 1** | Server Path Utilities | `CPath::stripTrailingSeparator`, `joinServerPath`, `splitPathComponents` | **COMPLETED** |
 | **Phase 2** | Credential & Buffer Mixins | `ServerCredentials` & `IOBufferManager` in `CFTP`, `CIMAP`, `CSMTP`, `CSFTP`, `CSCP`, `CSSHChannel` | **COMPLETED** |
 | **Phase 3** | Base64 Utility | Extract `Base64::encode` and `Base64::decode` into `CommonUtil.hpp`; refactor `CSMTP` & `CMIME` | **COMPLETED** |
-| **Phase 4** | SSH Exception Base | Extract `SSHException` base class for `CSSHSession`, `CSSHChannel`, `CSCP`, `CSFTP` | **PLANNED** |
+| **Phase 4** | SSH Exception Base | Extract `SSHExceptionBase` in `CommonAntik.hpp`; inherit in `CSSHSession`, `CSSHChannel`, `CSCP`, `CSFTP` | **COMPLETED** |
 | **Phase 5** | Regression & Coverage | Verify 141 unit tests (`ctest`) and code coverage (`gcov`) | **COMPLETED (100% Pass)** |
 
 ---

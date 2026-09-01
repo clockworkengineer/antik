@@ -31,29 +31,16 @@ namespace Antik::SSH
         //
         // Class exception
         //
-        struct Exception
+        struct Exception : public SSHExceptionBase
         {
-            Exception(CSSHChannel &channel, const std::string &functionName) : m_errorCode{channel.getSession().getErrorCode()},
-                                                                               m_errorMessage{channel.getSession().getError()}, m_functionName{functionName}
+            Exception(CSSHChannel &channel, const std::string &functionName)
+                : SSHExceptionBase("CSSHChannel", functionName, channel.getSession().getError(), channel.getSession().getErrorCode())
             {
             }
-            Exception(const std::string &errorMessage, const std::string &functionName) : m_errorMessage{errorMessage},
-                                                                                          m_functionName{functionName}
+            Exception(const std::string &errorMessage, const std::string &functionName)
+                : SSHExceptionBase("CSSHChannel", functionName, errorMessage)
             {
             }
-            int getCode() const
-            {
-                return m_errorCode;
-            }
-            std::string getMessage() const
-            {
-                return static_cast<std::string>("CSSHChannel Failure: (") + m_functionName + ") [" + m_errorMessage + "]";
-            }
-
-        private:
-            int m_errorCode{SSH_OK};    // SSH error code
-            std::string m_errorMessage; // SSH error message
-            std::string m_functionName; // Current function name
         };
         // ============
         // CONSTRUCTORS
