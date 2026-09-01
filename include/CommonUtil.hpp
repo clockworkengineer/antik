@@ -10,6 +10,7 @@
 #include <mutex>
 #include <condition_variable>
 #include <queue>
+#include <stack>
 #include <algorithm>
 #include <cctype>
 #include <sstream>
@@ -341,6 +342,52 @@ namespace Antik
                 if (byte4) decoding.append(1, ((byte3 & 0x03) << 6) | byte4);
             }
         }
+    };
+
+    //
+    // Thread-safe Connection Pool for reusable client connections
+    //
+    template <typename T>
+    class ConnectionPool
+    {
+    public:
+        using FactoryFn = std::function<std::unique_ptr<T>()>;
+
+        explicit ConnectionPool(FactoryFn factory, std::size_t initialSize = 2)
+            : m_factory(factory)
+        {
+            for (std::size_t i = 0; i < initialSize; ++i)
+            {
+                if (m_factory)
+                {
+                    m_pool.push(m_factory());
+                }
+            }
+        }
+
+        std::unique_ptr<T> acquire()
+        {
+            std::lock_guard<std::mutex> lock(m_mutex);
+            if (m_pool.empty())
+            {
+                return m_factory ? m_factory() : nullptr;
+            }
+            auto connection = std::move(m_pool.top());
+            m_pool.pop();
+            return connection;
+        }
+
+        void release(std::unique_ptr<T> connection)
+        {
+            if (!connection) return;
+            std::lock_guard<std::mutex> lock(m_mutex);
+            m_pool.push(std::move(connection));
+        }
+
+    private:
+        FactoryFn m_factory;
+        std::stack<std::unique_ptr<T>> m_pool;
+        std::mutex m_mutex;
     };
 } // namespace Antik
 #endif /* COMMONUTIL_HPP */

@@ -128,6 +128,8 @@ namespace Antik::IMAP
         void setOAuth2Token(const std::string &userName, const std::string &bearerToken);
         std::string getServer(void) const;
         std::string getUser(void) const;
+        using IMAPEventCallback = std::function<void(const std::string &eventNotification)>;
+
         //
         // IMAP connect, send command and disconnect
         //
@@ -135,6 +137,8 @@ namespace Antik::IMAP
         std::string sendCommand(const std::string &commandLine);
         void disconnect(void);
         bool getConnectedStatus(void) const;
+        void startIDLEWatcher(IMAPEventCallback callback);
+        void stopIDLEWatcher();
         //
         // Set IMAP command tag prefix
         //

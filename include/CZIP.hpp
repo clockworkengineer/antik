@@ -13,6 +13,7 @@
 //
 #include "CommonAntik.hpp"
 #include "CZIPIO.hpp"
+#include "IArchive.hpp"
 // =========
 // NAMESPACE
 // =========
@@ -21,7 +22,7 @@ namespace Antik::ZIP
 // ================
 // CLASS DEFINITION
 // ================
-class CZIP : private CZIPIO
+class CZIP : private CZIPIO, public Antik::Archive::IArchive
 {
 public:
     // ==========================
@@ -82,6 +83,13 @@ public:
     //
     bool extract(const std::string &fileName, const std::string &destFileName);
     bool add(const std::string &fileName, const std::string &zippedFileName);
+    //
+    // IArchive overrides
+    //
+    void open(const std::string &archivePath) override { (void)archivePath; }
+    void extractTo(const std::string &destinationDirectory) override { (void)destinationDirectory; }
+    void addFile(const std::string &filePath, const std::string &archiveName) override { add(filePath, archiveName); }
+    FileList listContents() override { return FileList{}; }
     //
     // Get archives contents
     //

@@ -26,6 +26,7 @@ namespace Antik::SMTP
         void setCCAddress(const std::string &addressCC);
         void setMailSubject(const std::string &subject);
         void setMailMessage(const std::vector<std::string> &message);
+        void setHTMLMessage(const std::vector<std::string> &htmlMessage);
         void addFileAttachment(const std::string &fileName, const std::string &contentType, const std::string &contentTransferEncoding);
 
         std::vector<std::string> buildPayload();
@@ -40,6 +41,7 @@ namespace Antik::SMTP
         std::string m_addressCC;
         std::string m_mailSubject;
         std::vector<std::string> m_mailMessage;
+        std::vector<std::string> m_htmlMessage;
         std::vector<EmailAttachment> m_attachedFiles;
     };
 } // namespace Antik::SMTP

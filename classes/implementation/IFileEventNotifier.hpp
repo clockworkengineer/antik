@@ -39,6 +39,10 @@ namespace Antik::File
         {
             (void)watchDepth;
         }
+        virtual void setFilePatternFilter(const std::string &pattern) // Set file pattern filter (regex/glob)
+        {
+            (void)pattern;
+        }
         //
         // Get any thrown exceptions
         //

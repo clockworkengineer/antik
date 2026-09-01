@@ -96,6 +96,7 @@ set (ANTIK_INCLUDES
     ./include/CZIPIO.hpp
     ./include/FTPUtil.hpp
     ./include/IApprise.hpp
+    ./include/IArchive.hpp
     ./include/IRemoteFileSystem.hpp
     ./include/ISSHSession.hpp
     ./include/SCPUtil.hpp

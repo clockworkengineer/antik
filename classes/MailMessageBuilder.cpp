@@ -36,6 +36,11 @@ namespace Antik::SMTP
         m_mailMessage = message;
     }
 
+    void MailMessageBuilder::setHTMLMessage(const std::vector<std::string> &htmlMessage)
+    {
+        m_htmlMessage = htmlMessage;
+    }
+
     void MailMessageBuilder::addFileAttachment(const std::string &fileName, const std::string &contentType, const std::string &contentTransferEncoding)
     {
         m_attachedFiles.push_back({fileName, contentType, contentTransferEncoding});

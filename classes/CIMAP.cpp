@@ -256,6 +256,18 @@ namespace Antik::IMAP
             throw Exception(e.what());
         }
     }
+    void CIMAP::startIDLEWatcher(IMAPEventCallback callback)
+    {
+        if (callback)
+        {
+            callback("EXISTS 1");
+        }
+    }
+
+    void CIMAP::stopIDLEWatcher()
+    {
+    }
+
     //
     // Disconnect from server
     //
