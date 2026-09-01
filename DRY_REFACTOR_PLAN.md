@@ -101,14 +101,11 @@ public:
 
 ### Proposal 4: Endianness & Binary Field I/O (`EndianIO`)
 
-#### Problem
-`CZIPIO.cpp` duplicates low-level bit shifting (`(val >> 8) & 0xFF`, `(val >> 16) & 0xFF`) and byte copying across `putField` and `getField` for 16-bit, 32-bit, and 64-bit integer values in ZIP headers.
-
-#### Proposed Design
-Consolidate binary serialization methods into an `EndianIO` class in [`include/CommonUtil.hpp`](file:///home/robt/projects/antik/include/CommonUtil.hpp):
+#### Implemented Design
+Consolidated binary serialization methods into an `EndianIO` class in [`include/CommonUtil.hpp`](file:///home/robt/projects/antik/include/CommonUtil.hpp):
 
 ```cpp
-namespace Antik::Util {
+namespace Antik {
 
 class EndianIO {
 public:
@@ -120,16 +117,16 @@ public:
     }
 
     template <typename T>
-    static T readLittleEndian(const std::uint8_t *buffer) {
-        T value = 0;
+    static const std::uint8_t *readLittleEndian(T &val, const std::uint8_t *buffer) {
+        val = 0;
         for (std::size_t i = 0; i < sizeof(T); ++i) {
-            value |= (static_cast<T>(buffer[i]) << (i * 8));
+            val |= (static_cast<T>(buffer[i]) << (i * 8));
         }
-        return value;
+        return buffer + sizeof(T);
     }
 };
 
-} // namespace Antik::Util
+} // namespace Antik
 ```
 
 ---
@@ -195,7 +192,7 @@ private:
 | **Phase 1** | `DirectorySyncEngine` | Generic sync engine & const `FileMapper` methods in `CommonUtil.hpp` | **COMPLETED** |
 | **Phase 2** | `ThreadQueue<T>` | Thread-safe queue in `CommonUtil.hpp` for `CFileEventNotifier` | **COMPLETED** |
 | **Phase 3** | `StringUtil` | Common string trimming & tokenization helpers in `CommonUtil.hpp` | **COMPLETED** |
-| **Phase 4** | `EndianIO` | Binary little-endian I/O template functions for `CZIPIO` | **PLANNED** |
+| **Phase 4** | `EndianIO` | Binary little-endian I/O template functions for `CZIPIO` | **COMPLETED** |
 | **Phase 5** | `CCurl` Helpers | Credential & SSL option convenience methods in `CCurl` | **PLANNED** |
 | **Phase 6** | `TestHelpers.hpp` | Temporary file and directory fixtures for unit tests in `tests/` | **PLANNED** |
 | **Phase 7** | Regression Verification | Re-run 141-test Google Test suite (`ctest`) and `gcov` coverage | **COMPLETED (100% Pass)** |

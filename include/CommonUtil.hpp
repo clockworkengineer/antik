@@ -227,6 +227,33 @@ namespace Antik
     };
 
     //
+    // Little-endian binary I/O serialization helper
+    //
+    class EndianIO
+    {
+    public:
+        template <typename T>
+        static void writeLittleEndian(T val, std::vector<std::uint8_t> &buffer)
+        {
+            for (std::size_t i = 0; i < sizeof(T); ++i)
+            {
+                buffer.push_back(static_cast<std::uint8_t>((val >> (i * 8)) & 0xFF));
+            }
+        }
+
+        template <typename T>
+        static const std::uint8_t *readLittleEndian(T &val, const std::uint8_t *buffer)
+        {
+            val = 0;
+            for (std::size_t i = 0; i < sizeof(T); ++i)
+            {
+                val |= (static_cast<T>(buffer[i]) << (i * 8));
+            }
+            return buffer + sizeof(T);
+        }
+    };
+
+    //
     // Base64 encoding/decoding utility
     //
     class Base64
