@@ -3,6 +3,7 @@
 [![C++17](https://img.shields.io/badge/C%2B%2B-17-blue.svg)](https://isocpp.org/)
 [![License: MIT](https://img.shields.io/badge/License-MIT-yellow.svg)](LICENSE.txt)
 [![Build & Test](https://img.shields.io/badge/Build-Passing-brightgreen.svg)]()
+[![Buy Me A Coffee](https://img.shields.io/badge/Buy%20Me%20A%20Coffee-Donate-orange.svg)](https://buymeacoffee.com/roberttizz1)
 
 **Antik** is an enterprise-grade, modern C++ library providing cross-platform networking, remote filesystem management (FTP/S, SFTP, SCP, WebDAV), email messaging (SMTP/S, IMAP/S with XOAUTH2 support), file monitoring (`inotify`/Apprise), archive handling (ZIP), and thread-safe utility abstractions built strictly according to **SOLID Object-Oriented Design Principles**.
 
@@ -110,6 +111,16 @@ cmake --build build
 # Run unit test suite
 ctest --test-dir build --output-on-failure
 ```
+
+---
+
+## Support the Project
+
+If you find Antik helpful in your projects, feel free to support ongoing development:
+
+[![Buy Me A Coffee](https://img.shields.io/badge/Buy%20Me%20A%20Coffee-Donate-orange.svg?style=for-the-badge)](https://buymeacoffee.com/roberttizz1)
+
+👉 [**Buy Me a Coffee**](https://buymeacoffee.com/roberttizz1)
 
 ---
 
