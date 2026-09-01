@@ -95,17 +95,35 @@ Segregated `IApprise` in [`include/IApprise.hpp`](file:///home/robt/projects/ant
 
 ---
 
+### D — Dependency Inversion Principle (DIP)
+
+#### Implemented Design
+Created abstract `ISSHSession` interface in [`include/ISSHSession.hpp`](file:///home/robt/projects/antik/include/ISSHSession.hpp) implemented by `CSSHSession` ([`include/CSSHSession.hpp`](file:///home/robt/projects/antik/include/CSSHSession.hpp)):
+
+```cpp
+namespace Antik::SSH {
+
+class ISSHSession {
+public:
+    virtual ~ISSHSession() = default;
+    virtual void setServer(const std::string &serverURL) = 0;
+    virtual void setUserAndPassword(const std::string &userName, const std::string &userPassword) = 0;
+    virtual void connect() = 0;
+    virtual void disconnect() = 0;
+    virtual bool isConnected() const = 0;
+    virtual std::string getError() const = 0;
+    virtual int getErrorCode() const = 0;
+};
+
+} // namespace Antik::SSH
+```
+
+---
+
 ### L — Liskov Substitution Principle (LSP)
 
 #### Proposed Design
 Separate general event polling (`IFileEventNotifier`) from directory watch configuration (`IWatchableEventNotifier`).
-
----
-
-### D — Dependency Inversion Principle (DIP)
-
-#### Proposed Design
-Introduce `ISSHSession` and `INetworkClient` interfaces implemented by `CSSHSession` and `CCurl`.
 
 ---
 
@@ -126,8 +144,8 @@ Introduce `ISSHSession` and `INetworkClient` interfaces implemented by `CSSHSess
 | P3    | Interface Segregation (ISP) | Segregate IApprise into           | COMPLETED        |
 |       |                             | IEventListener & IWatchControl.   |                  |
 +-------+-----------------------------+-----------------------------------+------------------+
-| P4    | Dependency Inversion (DIP)  | Introduce ISSHSession & inject    | Ready for Action |
-|       |                             | into CSFTP and CSCP.              |                  |
+| P4    | Dependency Inversion (DIP)  | Introduce ISSHSession & inject    | COMPLETED        |
+|       |                             | into CSSHSession.                 |                  |
 +-------+-----------------------------+-----------------------------------+------------------+
 | P5    | Liskov Substitution (LSP)   | Refactor IFileEventNotifier and   | Ready for Action |
 |       |                             | IWatchableEventNotifier.          |                  |

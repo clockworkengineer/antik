@@ -20,6 +20,8 @@
 // =========
 // NAMESPACE
 // =========
+#include "ISSHSession.hpp"
+
 namespace Antik::SSH
 {
     // ==========================
@@ -35,7 +37,7 @@ namespace Antik::SSH
     // ================
     // CLASS DEFINITION
     // ================
-    class CSSHSession
+    class CSSHSession : public ISSHSession
     {
     public:
         // ==========================
@@ -88,15 +90,17 @@ namespace Antik::SSH
         //
         // Set session details
         //
-        void setServer(const std::string &server);
+        void setServer(const std::string &server) override;
         void setPort(unsigned int port);
         void setUser(const std::string &user);
         void setUserPassword(const std::string &password);
+        void setUserAndPassword(const std::string &userName, const std::string &userPassword) override;
         //
         // Connect/disconnect sessions
         //
-        void connect();
-        void disconnect(bool silent = false);
+        void connect() override;
+        void disconnect() override;
+        void disconnect(bool silent);
         //
         // User authorization functions
         //
@@ -147,7 +151,7 @@ namespace Antik::SSH
         // Session status methods
         //
         int getStatus() const;
-        bool isConnected() const;
+        bool isConnected() const override;
         bool isAuthorized() const;
         //
         // Get/Set option values for a session and also copy options,
@@ -158,8 +162,8 @@ namespace Antik::SSH
         //
         // Get SSH error code and message
         //
-        std::string getError() const;
-        int getErrorCode() const;
+        std::string getError() const override;
+        int getErrorCode() const override;
         //
         // Get libssh session structure
         //

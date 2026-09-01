@@ -125,6 +125,11 @@ namespace Antik::SSH
     {
         m_password = password;
     }
+    void CSSHSession::setUserAndPassword(const std::string &userName, const std::string &userPassword)
+    {
+        setUser(userName);
+        setUserPassword(userPassword);
+    }
     //
     // Connect to SSH server.
     //
@@ -138,6 +143,10 @@ namespace Antik::SSH
     //
     // Disconnect SSH session.
     //
+    void CSSHSession::disconnect()
+    {
+        disconnect(false);
+    }
     void CSSHSession::disconnect(bool silent)
     {
         if (m_session)
