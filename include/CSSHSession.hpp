@@ -113,6 +113,7 @@ namespace Antik::SSH
         virtual int userAuthorizationWithPassword();
         virtual int userAuthorizationWithPublicKey();
         virtual int userAuthorizationWithKeyboardInteractive();
+        virtual int userAuthorizationWithAgent();
         //
         // Verify server
         //

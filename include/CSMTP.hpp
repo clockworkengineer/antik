@@ -57,6 +57,7 @@ namespace Antik::SMTP
         // Set/Get email server account details. Note : No password get.
         void setServer(const std::string &serverURL);
         void setUserAndPassword(const std::string &userName, const std::string &userPassword);
+        void setOAuth2Token(const std::string &userName, const std::string &bearerToken);
         std::string getServer(void) const;
         std::string getUser(void) const;
         // Set/Get email message header details
@@ -129,6 +130,7 @@ namespace Antik::SMTP
         // =================
         std::string m_userName;                                   // Email account user name
         std::string m_userPassword;                               // Email account user name password
+        std::string m_oauth2Token;                                // OAuth2 Bearer token
         std::string m_serverURL;                                  // SMTP server URL
         std::string m_addressFrom;                                // Email Sender
         std::string m_addressTo;                                  // Main recipients addresses

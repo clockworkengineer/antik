@@ -555,16 +555,18 @@ namespace Antik::SSH
         return isARegularFile(attrs);
     }
 
-    void CSFTP::uploadFile(const std::string &localPath, const std::string &remotePath)
+    void CSFTP::uploadFile(const std::string &localPath, const std::string &remotePath, ProgressFn progressFn)
     {
         (void)localPath;
         (void)remotePath;
+        (void)progressFn;
     }
 
-    void CSFTP::downloadFile(const std::string &remotePath, const std::string &localPath)
+    void CSFTP::downloadFile(const std::string &remotePath, const std::string &localPath, ProgressFn progressFn)
     {
         (void)remotePath;
         (void)localPath;
+        (void)progressFn;
     }
 
     FileList CSFTP::listDirectory(const std::string &path)

@@ -226,6 +226,20 @@ namespace Antik::SSH
         return (returnCode);
     }
     //
+    // SSH agent user authorization.
+    //
+    int CSSHSession::userAuthorizationWithAgent()
+    {
+        int returnCode = userAuthorizationWithPublicKeyAuto();
+        if (returnCode == SSH_AUTH_ERROR)
+        {
+            throw Exception(*this, __func__);
+        }
+        m_authorized = true;
+        this->m_authorizarionType = UserAuthorizationType::PublicKey;
+        return (returnCode);
+    }
+    //
     // Keyboard interactive  user authorization. (Virtual: May be overridden)
     //
     int CSSHSession::userAuthorizationWithKeyboardInteractive()

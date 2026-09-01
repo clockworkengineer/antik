@@ -134,8 +134,8 @@ namespace Antik::FTP
         // == true passive mode otherwise active
         void setPassiveTransferMode(bool passiveEnabled);
         // FTP get and put file
-        std::uint16_t getFile(const std::string &remoteFilePath, const std::string &localFilePath);
-        std::uint16_t putFile(const std::string &remoteFilePath, const std::string &localFilePath);
+        std::uint16_t getFile(const std::string &remoteFilePath, const std::string &localFilePath, std::size_t offset = 0);
+        std::uint16_t putFile(const std::string &remoteFilePath, const std::string &localFilePath, std::size_t offset = 0);
         // FTP list file/directory
         std::uint16_t list(const std::string &directoryPath, std::string &listOutput);
         std::uint16_t listFiles(const std::string &directoryPath, FileList &fileList);
@@ -148,8 +148,8 @@ namespace Antik::FTP
         void getCurrentWorkingDirectory(std::string &path) override { getCurrentWoringDirectory(path); }
         void createDirectory(const std::string &path) override { makeDirectory(path); }
         bool isFile(const std::string &path) override;
-        void uploadFile(const std::string &localPath, const std::string &remotePath) override;
-        void downloadFile(const std::string &remotePath, const std::string &localPath) override;
+        void uploadFile(const std::string &localPath, const std::string &remotePath, ProgressFn progressFn = nullptr) override;
+        void downloadFile(const std::string &remotePath, const std::string &localPath, ProgressFn progressFn = nullptr) override;
         FileList listDirectory(const std::string &path) override;
         // FTP make/remove server directory
         std::uint16_t makeDirectory(const std::string &directoryName);

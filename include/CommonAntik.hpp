@@ -6,12 +6,28 @@
 #include <string>
 #include <vector>
 #include <cstdint>
+#include <functional>
+
 namespace Antik
 {
     //
     // Container for list of file paths
     //
     using FileList = std::vector<std::string>;
+
+    //
+    // Transfer Progress Information
+    //
+    struct TransferProgress
+    {
+        std::uint64_t bytesTransferred{0};
+        std::uint64_t totalBytes{0};
+        double transferRateBytesPerSec{0.0};
+        double percentage{0.0};
+    };
+
+    using ProgressFn = std::function<bool(const TransferProgress &progress)>;
+
     //
     // Server path separator
     //

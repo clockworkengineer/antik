@@ -165,8 +165,8 @@ namespace Antik::SSH
         void getCurrentWorkingDirectory(std::string &path) override;
         bool isDirectory(const std::string &path) override;
         bool isFile(const std::string &path) override;
-        void uploadFile(const std::string &localPath, const std::string &remotePath) override;
-        void downloadFile(const std::string &remotePath, const std::string &localPath) override;
+        void uploadFile(const std::string &localPath, const std::string &remotePath, ProgressFn progressFn = nullptr) override;
+        void downloadFile(const std::string &remotePath, const std::string &localPath, ProgressFn progressFn = nullptr) override;
         FileList listDirectory(const std::string &path) override;
         //
         // Create/Remove(delete) symbolic link). Get target file of link.

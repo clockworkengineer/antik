@@ -288,16 +288,18 @@ namespace Antik::SSH
         return true;
     }
 
-    void CSCP::uploadFile(const std::string &localPath, const std::string &remotePath)
+    void CSCP::uploadFile(const std::string &localPath, const std::string &remotePath, ProgressFn progressFn)
     {
         (void)localPath;
         (void)remotePath;
+        (void)progressFn;
     }
 
-    void CSCP::downloadFile(const std::string &remotePath, const std::string &localPath)
+    void CSCP::downloadFile(const std::string &remotePath, const std::string &localPath, ProgressFn progressFn)
     {
         (void)remotePath;
         (void)localPath;
+        (void)progressFn;
     }
 
     FileList CSCP::listDirectory(const std::string &path)

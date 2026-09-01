@@ -3,6 +3,7 @@
 
 #include <string>
 #include <vector>
+#include <future>
 #include "CommonAntik.hpp"
 
 namespace Antik::Network
@@ -20,9 +21,25 @@ namespace Antik::Network
         virtual void createDirectory(const std::string &path) = 0;
         virtual bool isDirectory(const std::string &path) = 0;
         virtual bool isFile(const std::string &path) = 0;
-        virtual void uploadFile(const std::string &localPath, const std::string &remotePath) = 0;
-        virtual void downloadFile(const std::string &remotePath, const std::string &localPath) = 0;
+        virtual void uploadFile(const std::string &localPath, const std::string &remotePath, ProgressFn progressFn = nullptr) = 0;
+        virtual void downloadFile(const std::string &remotePath, const std::string &localPath, ProgressFn progressFn = nullptr) = 0;
         virtual FileList listDirectory(const std::string &path) = 0;
+
+        virtual std::future<bool> uploadFileAsync(const std::string &localPath, const std::string &remotePath, ProgressFn progressFn = nullptr)
+        {
+            return std::async(std::launch::async, [this, localPath, remotePath, progressFn]() {
+                uploadFile(localPath, remotePath, progressFn);
+                return true;
+            });
+        }
+
+        virtual std::future<bool> downloadFileAsync(const std::string &remotePath, const std::string &localPath, ProgressFn progressFn = nullptr)
+        {
+            return std::async(std::launch::async, [this, remotePath, localPath, progressFn]() {
+                downloadFile(remotePath, localPath, progressFn);
+                return true;
+            });
+        }
     };
 } // namespace Antik::Network
 

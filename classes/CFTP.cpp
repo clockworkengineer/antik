@@ -464,20 +464,24 @@ namespace Antik::FTP
     //
     // Transfer a file from the server to a local file.
     //
-    std::uint16_t CFTP::getFile(const std::string &remoteFilePath, const std::string &localFilePath)
+    std::uint16_t CFTP::getFile(const std::string &remoteFilePath, const std::string &localFilePath, std::size_t offset)
     {
         try
         {
-            std::ofstream localFile{localFilePath, std::ofstream::binary};
+            std::ofstream localFile{localFilePath, std::ofstream::binary | (offset ? std::ofstream::app : std::ofstream::trunc)};
             if (!m_connected)
             {
-                throw std::logic_error("Already connected to a server.");
+                throw std::logic_error("Not connected to a server.");
             }
             if (localFile)
             {
                 localFile.close();
                 if (sendTransferMode())
                 {
+                    if (offset > 0)
+                    {
+                        ftpCommand("REST " + std::to_string(offset));
+                    }
                     ftpCommand("RETR " + remoteFilePath);
                     transferOnDataChannel(localFilePath, DataTransferType::download);
                 }
@@ -497,20 +501,24 @@ namespace Antik::FTP
     //
     // Transfer a file to the server from a local file.
     //
-    std::uint16_t CFTP::putFile(const std::string &remoteFilePath, const std::string &localFilePath)
+    std::uint16_t CFTP::putFile(const std::string &remoteFilePath, const std::string &localFilePath, std::size_t offset)
     {
         try
         {
             std::ifstream localFile{localFilePath, std::ifstream::binary};
             if (!m_connected)
             {
-                throw std::logic_error("Already connected to a server.");
+                throw std::logic_error("Not connected to a server.");
             }
             if (localFile)
             {
                 localFile.close();
                 if (sendTransferMode())
                 {
+                    if (offset > 0)
+                    {
+                        ftpCommand("REST " + std::to_string(offset));
+                    }
                     ftpCommand("STOR " + remoteFilePath);
                     transferOnDataChannel(localFilePath, DataTransferType::upload);
                 }
@@ -984,13 +992,15 @@ namespace Antik::FTP
     {
     }
 
-    void CFTP::uploadFile(const std::string &localPath, const std::string &remotePath)
+    void CFTP::uploadFile(const std::string &localPath, const std::string &remotePath, ProgressFn progressFn)
     {
+        (void)progressFn;
         putFile(remotePath, localPath);
     }
 
-    void CFTP::downloadFile(const std::string &remotePath, const std::string &localPath)
+    void CFTP::downloadFile(const std::string &remotePath, const std::string &localPath, ProgressFn progressFn)
     {
+        (void)progressFn;
         getFile(remotePath, localPath);
     }
 

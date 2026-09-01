@@ -15,6 +15,7 @@
 // CLASS DEFINITIONS
 // =================
 #include "CIMAP.hpp"
+#include "CommonUtil.hpp"
 // ====================
 // CLASS IMPLEMENTATION
 // ====================
@@ -202,6 +203,11 @@ namespace Antik::IMAP
     {
         m_tagPrefix = tagPrefix;
     }
+    void CIMAP::setOAuth2Token(const std::string &userName, const std::string &bearerToken)
+    {
+        m_userName = userName;
+        m_oauth2Token = bearerToken;
+    }
     //
     // Setup connection to server
     //
@@ -222,9 +228,20 @@ namespace Antik::IMAP
             m_connected = true;
             // Allocate IO Buffer
             m_ioBuffer = std::make_unique<char[]>(m_ioBufferSize);
-            // Login using set credentials
-            CIMAPParse::COMMANDRESPONSE parsedResponse = CIMAPParse::parseResponse(sendCommand(
-                static_cast<std::string>(IMAP::kLOGIN) + " " + this->m_userName + " " + this->m_userPassword));
+            // Login using set credentials or XOAUTH2 token
+            std::string loginCmd;
+            if (!m_oauth2Token.empty())
+            {
+                std::string rawToken = "user=" + m_userName + "\1auth=Bearer " + m_oauth2Token + "\1\1";
+                std::string encodedToken;
+                Base64::encode(rawToken, encodedToken, rawToken.size());
+                loginCmd = "AUTHENTICATE XOAUTH2 " + encodedToken;
+            }
+            else
+            {
+                loginCmd = static_cast<std::string>(IMAP::kLOGIN) + " " + this->m_userName + " " + this->m_userPassword;
+            }
+            CIMAPParse::COMMANDRESPONSE parsedResponse = CIMAPParse::parseResponse(sendCommand(loginCmd));
             if (parsedResponse->byeSent)
             {
                 throw std::runtime_error("Received BYE from server: " + parsedResponse->errorMessage);

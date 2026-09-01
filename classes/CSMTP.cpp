@@ -326,6 +326,11 @@ namespace Antik::SMTP
     {
         m_attachedFiles.push_back({fileName, contentType, contentTransferEncoding});
     }
+    void CSMTP::setOAuth2Token(const std::string &userName, const std::string &bearerToken)
+    {
+        m_userName = userName;
+        m_oauth2Token = bearerToken;
+    }
     //
     // Post email
     //
@@ -334,7 +339,14 @@ namespace Antik::SMTP
         using namespace Antik::Network;
         m_connection.setOption<long>(CURLOPT_PROTOCOLS, (CURLPROTO_SMTP | CURLPROTO_SMTPS));
         m_connection.setOption<const char *>(CURLOPT_USERNAME, m_userName.c_str());
-        m_connection.setOption<const char *>(CURLOPT_PASSWORD, m_userPassword.c_str());
+        if (!m_oauth2Token.empty())
+        {
+            m_connection.setOption<const char *>(CURLOPT_XOAUTH2_BEARER, m_oauth2Token.c_str());
+        }
+        else
+        {
+            m_connection.setOption<const char *>(CURLOPT_PASSWORD, m_userPassword.c_str());
+        }
         m_connection.setOption<const char *>(CURLOPT_URL, m_serverURL.c_str());
         m_connection.setOption<long>(CURLOPT_USE_SSL, CURLUSESSL_ALL);
         if (!m_mailCABundle.empty())

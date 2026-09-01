@@ -59,6 +59,7 @@ set (ANTIK_SOURCES
     ./classes/CSSHChannel.cpp
     ./classes/CSSHSession.cpp
     ./classes/CTask.cpp
+    ./classes/CWebDAV.cpp
     ./classes/CZIP.cpp
     ./classes/CZIPIO.cpp
     ./classes/implementation/CFileEventNotifier.cpp
@@ -90,6 +91,7 @@ set (ANTIK_INCLUDES
     ./include/CSSHChannel.hpp
     ./include/CSSHSession.hpp
     ./include/CTask.hpp
+    ./include/CWebDAV.hpp
     ./include/CZIP.hpp
     ./include/CZIPIO.hpp
     ./include/FTPUtil.hpp
