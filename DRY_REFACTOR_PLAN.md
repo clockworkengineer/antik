@@ -1,178 +1,260 @@
-# Antik C++ Library: Concrete DRY (Don't Repeat Yourself) Refactoring Plan
+# Antik C++ Library: Concrete DRY (Don't Repeat Yourself) Refactor Plan
 
-This document presents a comprehensive source analysis and architectural refactoring plan for the Antik C++ library to eliminate code duplication, enforce reusable core abstractions, and simplify maintenance.
-
----
-
-## 1. Source Code Audit & Code Duplication Analysis
-
-A thorough audit of `classes/`, `utility/`, and `include/` identified seven core patterns of code duplication:
-
-| # | Pattern Name | Duplicate Code Locations | Core Problem |
-|---|---|---|---|
-| 1 | **Server Path Operations** | `FTPUtil.cpp`, `SCPUtil.cpp`, `SFTPUtil.cpp`, `CApprise.cpp`, `CFileEventNotifier.cpp`, `CPath.cpp` | Repeated `path.pop_back()` for trailing slashes, duplicate `//` character stripping, and custom path component splitting. |
-| 2 | **Server Account Credentials** | `CFTP.hpp`, `CIMAP.hpp`, `CSMTP.hpp`, `CSSHSession.hpp` | Identical fields (`m_serverName`, `m_serverPort`, `m_userName`, `m_userPassword`) and getters/setters re-declared across 4 protocol headers. |
-| 3 | **I/O Buffer Sizing** | `CFTP.hpp`, `CIMAP.hpp`, `CSFTP.hpp`, `CSCP.hpp`, `CSSHChannel.hpp`, `CZIP.hpp` | Duplicate `m_ioBufferSize`, `setIoBufferSize()`, and `getIoBufferSize()` declarations across 6 library headers. |
-| 4 | **Base64 Encoding & Decoding** | `CSMTP.cpp`, `CMIME.cpp` | Fragmented Base64 bit-shifting, encoding tables, and character decode lambda functions. |
-| 5 | **SSH Module Exception Classes** | `CSSHSession.hpp`, `CSSHChannel.hpp`, `CSCP.hpp`, `CSFTP.hpp` | Identical `Exception` struct declarations (`m_errorCode`, `m_errorMessage`, `m_functionName`, `getMessage()`, `getCode()`). |
-| 6 | **Exception Re-wrapping Boilerplate** | `CApprise.cpp`, `CSMTP.cpp`, `CFTP.cpp`, `CIMAP.cpp`, `CSFTP.cpp`, `CSCP.cpp` | Over 50+ public member functions repeating identical `try { ... } catch (const std::exception &e) { throw Exception(e.what()); }` blocks. |
-| 7 | **Console & File Stream Redirection** | `CRedirect.hpp`, `CommonUtil.hpp`, `UTCUtility.cpp` | Repeated `std::cout.rdbuf()` saving and buffer swapping logic for stdout/stderr redirection. |
+This document outlines a technical source analysis and concrete architectural refactoring plan for the Antik C++ library. The objective is to eliminate code duplication across protocols, utility functions, file systems, and unit test suites, establishing reusable core abstractions.
 
 ---
 
-## 2. Concrete Shared Architecture & Implementation Specifications
+## 1. Executive Summary & Source Code Audit
 
-### A. Network Server Credentials Abstraction (`ServerCredentials`)
+A comprehensive analysis of `classes/`, `utility/`, `include/`, and `tests/` identified six major areas for DRY refactoring across the codebase:
 
-**File**: [`include/CommonAntik.hpp`](file:///home/robt/projects/antik/include/CommonAntik.hpp)
+```
++-----------------------------------------------------------------------------------+
+|                            ANTIK DRY REFACTOR PLAN                                |
++-----------------------------------+-----------------------------------------------+
+| Refactoring Area                  | Target Components                             |
++-----------------------------------+-----------------------------------------------+
+| 1. Directory Sync & Backup Engine | utility/FTPUtil.cpp, utility/SFTPUtil.cpp     |
+| 2. Thread-Safe Event Queue        | classes/implementation/CFileEventNotifier.cpp |
+| 3. String Parsing & Tokenization  | classes/CIMAPParse.cpp, classes/CMIME.cpp     |
+| 4. Endian Binary Serialization    | classes/CZIPIO.cpp                            |
+| 5. cURL Connection Setup Helpers  | classes/CCurl.cpp, CSMTP.cpp, CFTP.cpp        |
+| 6. Unit Test Helpers & Fixtures   | tests/*.cpp                                   |
++-----------------------------------+-----------------------------------------------+
+```
 
-Encapsulate server connection address and authentication credentials into a single reusable mixin:
+---
+
+## 2. Refactoring Proposals & Detailed Specifications
+
+### Proposal 1: Generic Directory Synchronization Engine (`DirectorySyncEngine`)
+
+#### Problem
+`FTPUtil.cpp` and `SFTPUtil.cpp` both implement recursive directory synchronization, backup, and restore routines (`syncDirectory`, `backupDirectory`, `restoreDirectory`). Both files duplicate:
+- Local vs remote file modification timestamp comparison
+- File traversal loops
+- File transfer callback invocations (`FileCompletionFn`, `FileFeedBackFn`)
+
+#### Proposed Design
+Extract a template-based `DirectorySyncEngine` in [`include/CommonUtil.hpp`](file:///home/robt/projects/antik/include/CommonUtil.hpp) driven by a protocol adapter interface:
 
 ```cpp
-namespace Antik {
-class ServerCredentials {
+namespace Antik::Util {
+
+template <typename ProtocolAdapter>
+class DirectorySyncEngine {
 public:
-    virtual ~ServerCredentials() = default;
-    void setServer(const std::string &server) { m_serverName = server; }
-    void setPort(const std::string &port) { m_serverPort = port; }
-    void setUser(const std::string &user) { m_userName = user; }
-    void setUserPassword(const std::string &password) { m_userPassword = password; }
-    void setUserAndPassword(const std::string &userName, const std::string &userPassword) {
-        m_userName = userName;
-        m_userPassword = userPassword;
+    explicit DirectorySyncEngine(ProtocolAdapter &adapter) : m_adapter{adapter} {}
+
+    void syncDirectory(const std::string &localDir, const std::string &remoteDir,
+                       FileFeedBackFn feedbackFn = nullptr, FileCompletionFn completionFn = nullptr) {
+        FileList localFiles, remoteFiles;
+        listLocalRecursive(localDir, localFiles, feedbackFn);
+        m_adapter.listRemoteRecursive(remoteDir, remoteFiles, feedbackFn);
+
+        // Unified sync comparison & transfer loop
+        for (const auto &file : localFiles) {
+            if (m_adapter.shouldTransfer(file, localDir, remoteDir)) {
+                m_adapter.uploadFile(file, localDir, remoteDir);
+                if (completionFn) completionFn(file);
+            }
+        }
     }
-    std::string getServer() const { return m_serverName; }
-    std::string getPort() const { return m_serverPort; }
-    std::string getUser() const { return m_userName; }
-protected:
-    std::string m_serverName;
-    std::string m_serverPort{"21"};
-    std::string m_userName;
-    std::string m_userPassword;
-};
-}
-```
 
-- **Target Inheritors**: [`CFTP`](file:///home/robt/projects/antik/include/CFTP.hpp), [`CIMAP`](file:///home/robt/projects/antik/include/CIMAP.hpp), [`CSMTP`](file:///home/robt/projects/antik/include/CSMTP.hpp), [`CSSHSession`](file:///home/robt/projects/antik/include/CSSHSession.hpp).
+private:
+    ProtocolAdapter &m_adapter;
+};
+
+} // namespace Antik::Util
+```
 
 ---
 
-### B. Centralized I/O Buffer Manager (`IOBufferManager`)
+### Proposal 2: Thread-Safe Event Queue (`ThreadQueue<T>`)
 
-**File**: [`include/CommonAntik.hpp`](file:///home/robt/projects/antik/include/CommonAntik.hpp)
+#### Problem
+`CFileEventNotifier.cpp` manually manages thread synchronization, condition variables (`m_queuedEventsWaiting`), mutex locks (`m_queuedEventsLock`), and atomic flags (`m_doWork`) inside `getNextEvent` and `stopEventGeneration`.
 
-Unified buffer size state and accessor interface:
-
-```cpp
-namespace Antik {
-class IOBufferManager {
-public:
-    explicit IOBufferManager(std::uint32_t defaultBufferSize = 32768) : m_ioBufferSize{defaultBufferSize} {}
-    virtual ~IOBufferManager() = default;
-    void setIoBufferSize(std::uint32_t ioBufferSize) { m_ioBufferSize = ioBufferSize; }
-    void setIOBufferSize(std::uint32_t ioBufferSize) { m_ioBufferSize = ioBufferSize; }
-    std::uint32_t getIoBufferSize() const { return m_ioBufferSize; }
-    std::uint32_t getIOBufferSize() const { return m_ioBufferSize; }
-protected:
-    std::uint32_t m_ioBufferSize;
-};
-}
-```
-
-- **Target Inheritors**: `CFTP`, `CIMAP`, `CSFTP`, `CSCP`, `CSSHChannel`, `CZIP`.
-
----
-
-### C. SSH Module Exception Hierarchy (`SSHExceptionBase`)
-
-**File**: [`include/CommonAntik.hpp`](file:///home/robt/projects/antik/include/CommonAntik.hpp)
-
-Unified exception base class for libssh wrapper classes:
+#### Proposed Design
+Create a reusable thread-safe queue template in [`include/CommonUtil.hpp`](file:///home/robt/projects/antik/include/CommonUtil.hpp):
 
 ```cpp
-namespace Antik::SSH {
-class SSHExceptionBase {
+namespace Antik::Util {
+
+template <typename T>
+class ThreadQueue {
 public:
-    SSHExceptionBase(const std::string &className, const std::string &functionName, const std::string &errorMessage, int errorCode = 0)
-        : m_className{className}, m_functionName{functionName}, m_errorMessage{errorMessage}, m_errorCode{errorCode} {}
-    virtual ~SSHExceptionBase() = default;
-    int getCode() const { return m_errorCode; }
-    std::string getMessage() const {
-        return m_className + " Failure: (" + m_functionName + ") [" + m_errorMessage + "]";
+    void push(T item) {
+        std::lock_guard<std::mutex> lock(m_mutex);
+        if (!m_stopped) {
+            m_queue.push(std::move(item));
+            m_cv.notify_one();
+        }
     }
-protected:
-    std::string m_className;
-    std::string m_functionName;
-    std::string m_errorMessage;
-    int m_errorCode{0};
-};
-}
-```
 
-- **Target Inheritors**: `CSSHSession::Exception`, `CSSHChannel::Exception`, `CSCP::Exception`, `CSFTP::Exception`.
+    bool pop(T &item) {
+        std::unique_lock<std::mutex> lock(m_mutex);
+        m_cv.wait(lock, [this] { return !m_queue.empty() || m_stopped; });
+        if (m_queue.empty() || m_stopped) return false;
+        item = std::move(m_queue.front());
+        m_queue.pop();
+        return true;
+    }
+
+    void stop() {
+        std::lock_guard<std::mutex> lock(m_mutex);
+        m_stopped = true;
+        m_cv.notify_all();
+    }
+
+private:
+    std::queue<T> m_queue;
+    std::mutex m_mutex;
+    std::condition_variable m_cv;
+    bool m_stopped{false};
+};
+
+} // namespace Antik::Util
+```
 
 ---
 
-### D. Base64 Processing Utility (`Base64`)
+### Proposal 3: String Utility & Tokenization Helper (`StringUtil`)
 
-**File**: [`include/CommonUtil.hpp`](file:///home/robt/projects/antik/include/CommonUtil.hpp)
+#### Problem
+String quote stripping (`line.erase(...)`), whitespace trimming, outer parenthesis stripping, and case-insensitive comparisons are implemented with ad-hoc string operations across `CIMAPParse.cpp`, `CIMAPBodyStruct.cpp`, `CMIME.cpp`, and `CSMTP.cpp`.
 
-Centralized static Base64 encoding and decoding routines:
+#### Proposed Design
+Create a `StringUtil` helper class in [`include/CommonUtil.hpp`](file:///home/robt/projects/antik/include/CommonUtil.hpp):
 
 ```cpp
-namespace Antik {
-class Base64 {
-public:
-    static void encode(const std::string &decoding, std::string &encoding, std::uint32_t numberOfBytes);
-    static void decode(const std::string &encoding, std::string &decoding, std::uint32_t numberOfBytes);
-};
-}
-```
+namespace Antik::Util {
 
-- **Consumers**: `CSMTP::encodeToBase64`, `CSMTP::decodeFromBase64`, `CMIME::convertMIMEStringToASCII`.
+class StringUtil {
+public:
+    static std::string trim(const std::string &str);
+    static std::string stripQuotes(const std::string &str);
+    static std::string stripOuterParens(const std::string &str);
+    static bool equalsIgnoreCase(const std::string &a, const std::string &b);
+    static bool startsWithIgnoreCase(const std::string &str, const std::string &prefix);
+    static std::vector<std::string> split(const std::string &str, char delimiter);
+};
+
+} // namespace Antik::Util
+```
 
 ---
 
-### E. Server Path Helper Methods (`CPath`)
+### Proposal 4: Endianness & Binary Field I/O (`EndianIO`)
 
-**File**: [`include/CPath.hpp`](file:///home/robt/projects/antik/include/CPath.hpp) / [`classes/CPath.cpp`](file:///home/robt/projects/antik/classes/CPath.cpp)
+#### Problem
+`CZIPIO.cpp` duplicates low-level bit shifting (`(val >> 8) & 0xFF`, `(val >> 16) & 0xFF`) and byte copying across `putField` and `getField` for 16-bit, 32-bit, and 64-bit integer values in ZIP headers.
 
-Static path manipulation methods:
+#### Proposed Design
+Consolidate binary serialization methods into an `EndianIO` class in [`include/CommonUtil.hpp`](file:///home/robt/projects/antik/include/CommonUtil.hpp):
 
 ```cpp
-namespace Antik::File {
-class CPath {
+namespace Antik::Util {
+
+class EndianIO {
 public:
-    static void stripTrailingSeparator(std::string &path);
-    static std::string joinServerPath(const std::string &cwd, const std::string &path, const std::string &file = "");
-    static std::vector<std::string> splitPathComponents(const std::string &path);
+    template <typename T>
+    static void writeLittleEndian(T value, std::vector<std::uint8_t> &buffer) {
+        for (std::size_t i = 0; i < sizeof(T); ++i) {
+            buffer.push_back(static_cast<std::uint8_t>((value >> (i * 8)) & 0xFF));
+        }
+    }
+
+    template <typename T>
+    static T readLittleEndian(const std::uint8_t *buffer) {
+        T value = 0;
+        for (std::size_t i = 0; i < sizeof(T); ++i) {
+            value |= (static_cast<T>(buffer[i]) << (i * 8));
+        }
+        return value;
+    }
 };
-}
+
+} // namespace Antik::Util
 ```
 
-- **Consumers**: `FTPUtil.cpp`, `SCPUtil.cpp`, `SFTPUtil.cpp`, `CApprise.cpp`, `CFileEventNotifier.cpp`.
+---
+
+### Proposal 5: Centralized cURL Option Helpers (`CCurl`)
+
+#### Problem
+`CFTP.cpp` and `CSMTP.cpp` repeat setup calls for timeouts, SSL verification, credentials, and verbose logging on `CCurl` instances.
+
+#### Proposed Design
+Add helper convenience methods to [`include/CCurl.hpp`](file:///home/robt/projects/antik/include/CCurl.hpp):
+
+```cpp
+namespace Antik::CURL {
+
+class CCurl {
+public:
+    void setCredentials(const std::string &user, const std::string &pass);
+    void setSSLVerification(bool verifyPeer = true, bool verifyHost = true);
+    void setTimeouts(long connectTimeoutSec, long transferTimeoutSec);
+};
+
+} // namespace Antik::CURL
+```
 
 ---
 
-## 3. Implementation Roadmap & Status
+### Proposal 6: Shared Unit Test Helpers & Fixtures (`tests/TestHelpers.hpp`)
 
-| Phase | Category | Description | Status |
-|---|---|---|---|
-| **Phase 1** | Server Path Utilities | Add `stripTrailingSeparator`, `joinServerPath`, `splitPathComponents` to `CPath`. Refactor `FTPUtil.cpp`. | **COMPLETED** |
-| **Phase 2** | Credential & Buffer Mixins | Implement `ServerCredentials` & `IOBufferManager` in `CommonAntik.hpp`. Inherit in `CFTP`, `CIMAP`, `CSMTP`, `CSFTP`, `CSCP`, `CSSHChannel`. | **COMPLETED** |
-| **Phase 3** | Base64 Utility | Extract `Base64::encode` & `Base64::decode` into `CommonUtil.hpp`. Refactor `CSMTP.cpp` & `CMIME.cpp`. | **COMPLETED** |
-| **Phase 4** | SSH Exception Hierarchy | Extract `SSHExceptionBase` into `CommonAntik.hpp`. Inherit in `CSSHSession`, `CSSHChannel`, `CSCP`, `CSFTP`. | **COMPLETED** |
-| **Phase 5** | Regression Testing | Build project, verify 141 Google Tests (`ctest`), check `gcov` line coverage. | **COMPLETED (100% Pass)** |
+#### Problem
+Unit test files in `tests/` (`UTCCCurl.cpp`, `UTCFTP.cpp`, `UTCIMAP.cpp`, `UTCSMTP.cpp`, `UTCSSH.cpp`) duplicate temporary test file creation and test directory setup.
+
+#### Proposed Design
+Create [`tests/TestHelpers.hpp`](file:///home/robt/projects/antik/tests/TestHelpers.hpp):
+
+```cpp
+namespace Antik::Test {
+
+class TempTestFile {
+public:
+    explicit TempTestFile(const std::string &filename, const std::string &content = "Test Content")
+        : m_filepath(filename) {
+        std::ofstream ofs(m_filepath);
+        ofs << content;
+    }
+    ~TempTestFile() {
+        std::filesystem::remove(m_filepath);
+    }
+    std::string getPath() const { return m_filepath; }
+private:
+    std::string m_filepath;
+};
+
+} // namespace Antik::Test
+```
 
 ---
 
-## 4. Verification & Build Commands
+## 3. Refactoring Implementation Phases
+
+| Phase | Proposal / Target Area | Deliverables & Scope |
+|---|---|---|
+| **Phase 1** | `DirectorySyncEngine` | Generic sync engine in `CommonUtil.hpp` for `FTPUtil` & `SFTPUtil`. |
+| **Phase 2** | `ThreadQueue<T>` | Thread-safe queue in `CommonUtil.hpp` for `CFileEventNotifier`. |
+| **Phase 3** | `StringUtil` | Common string trimming & tokenization helpers in `CommonUtil.hpp`. |
+| **Phase 4** | `EndianIO` | Binary little-endian I/O template functions for `CZIPIO`. |
+| **Phase 5** | `CCurl` Helpers | Credential & SSL option convenience methods in `CCurl`. |
+| **Phase 6** | `TestHelpers.hpp` | Temporary file and directory fixtures for unit tests in `tests/`. |
+| **Phase 7** | Regression Verification | Re-run 141-test Google Test suite (`ctest`) and `gcov` coverage. |
+
+---
+
+## 4. Build & Verification Commands
 
 ```bash
-# 1. Configure and build project, unit tests, and examples
+# Configure and build library, tests, and example executables
 cmake -S /home/robt/projects/antik -B /home/robt/projects/antik/build
 cmake --build /home/robt/projects/antik/build
 
-# 2. Run unit test suite
+# Execute Google Test unit test suite
 ctest --test-dir /home/robt/projects/antik/build --output-on-failure
 ```
