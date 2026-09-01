@@ -983,4 +983,26 @@ namespace Antik::FTP
     CFTP::~CFTP()
     {
     }
+
+    void CFTP::uploadFile(const std::string &localPath, const std::string &remotePath)
+    {
+        putFile(remotePath, localPath);
+    }
+
+    void CFTP::downloadFile(const std::string &remotePath, const std::string &localPath)
+    {
+        getFile(remotePath, localPath);
+    }
+
+    FileList CFTP::listDirectory(const std::string &path)
+    {
+        FileList list;
+        listFiles(path, list);
+        return list;
+    }
+
+    bool CFTP::isFile(const std::string &path)
+    {
+        return fileExists(path) && !isDirectory(path);
+    }
 } // namespace Antik::FTP

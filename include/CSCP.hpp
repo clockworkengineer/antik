@@ -17,6 +17,8 @@
 // =========
 // NAMESPACE
 // =========
+#include "IRemoteFileSystem.hpp"
+
 namespace Antik::SSH
 {
     class CSSHSession;
@@ -26,7 +28,7 @@ namespace Antik::SSH
     // ================
     // CLASS DEFINITION
     // ================
-    class CSCP : public IOBufferManager
+    class CSCP : public IOBufferManager, public Network::IRemoteFileSystem
     {
     public:
         // ==========================
@@ -95,6 +97,17 @@ namespace Antik::SSH
         std::shared_ptr<char[]> getIoBuffer();
         void setIoBufferSize(std::uint32_t ioBufferSize);
         std::uint32_t getIoBufferSize() const;
+        //
+        // IRemoteFileSystem overrides
+        //
+        void changeDir(const std::string &path) override;
+        void getCurrentWorkingDirectory(std::string &path) override;
+        void createDirectory(const std::string &path) override;
+        bool isDirectory(const std::string &path) override;
+        bool isFile(const std::string &path) override;
+        void uploadFile(const std::string &localPath, const std::string &remotePath) override;
+        void downloadFile(const std::string &remotePath, const std::string &localPath) override;
+        FileList listDirectory(const std::string &path) override;
         //
         // Get internal libssh ssh/scp session data structure pointers.
         //

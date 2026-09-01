@@ -18,6 +18,8 @@
 // =========
 // NAMESPACE
 // =========
+#include "IRemoteFileSystem.hpp"
+
 namespace Antik::FTP
 {
     // ==========================
@@ -26,7 +28,7 @@ namespace Antik::FTP
     // ================
     // CLASS DEFINITION
     // ================
-    class CFTP : public ServerCredentials, public IOBufferManager
+    class CFTP : public ServerCredentials, public IOBufferManager, public Network::IRemoteFileSystem
     {
     public:
         // ==========================
@@ -142,6 +144,13 @@ namespace Antik::FTP
         // FTP set/get current working directory
         std::uint16_t changeWorkingDirectory(const std::string &workingDirectoryPath);
         std::uint16_t getCurrentWoringDirectory(std::string &currentWoringDirectory);
+        void changeDir(const std::string &path) override { changeWorkingDirectory(path); }
+        void getCurrentWorkingDirectory(std::string &path) override { getCurrentWoringDirectory(path); }
+        void createDirectory(const std::string &path) override { makeDirectory(path); }
+        bool isFile(const std::string &path) override;
+        void uploadFile(const std::string &localPath, const std::string &remotePath) override;
+        void downloadFile(const std::string &remotePath, const std::string &localPath) override;
+        FileList listDirectory(const std::string &path) override;
         // FTP make/remove server directory
         std::uint16_t makeDirectory(const std::string &directoryName);
         std::uint16_t removeDirectory(const std::string &directoryName);
@@ -153,7 +162,7 @@ namespace Antik::FTP
         // FTP get file last modified time
         std::uint16_t getModifiedDateTime(const std::string &filePath, DateTime &modifiedDateTime);
         // FTP Is file a directory, does file exist
-        bool isDirectory(const std::string &fileName);
+        bool isDirectory(const std::string &fileName) override;
         bool fileExists(const std::string &fileName);
         // FTP server features
         std::vector<std::string> getServerFeatures();

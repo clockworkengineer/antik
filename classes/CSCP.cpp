@@ -259,4 +259,50 @@ namespace Antik::SSH
     {
         return m_scp;
     }
+
+    void CSCP::changeDir(const std::string &path)
+    {
+        (void)path;
+    }
+
+    void CSCP::getCurrentWorkingDirectory(std::string &path)
+    {
+        path = ".";
+    }
+
+    void CSCP::createDirectory(const std::string &path)
+    {
+        pushDirectory(path, 0755);
+        leaveDirectory();
+    }
+
+    bool CSCP::isDirectory(const std::string &path)
+    {
+        (void)path;
+        return false;
+    }
+
+    bool CSCP::isFile(const std::string &path)
+    {
+        (void)path;
+        return true;
+    }
+
+    void CSCP::uploadFile(const std::string &localPath, const std::string &remotePath)
+    {
+        (void)localPath;
+        (void)remotePath;
+    }
+
+    void CSCP::downloadFile(const std::string &remotePath, const std::string &localPath)
+    {
+        (void)remotePath;
+        (void)localPath;
+    }
+
+    FileList CSCP::listDirectory(const std::string &path)
+    {
+        (void)path;
+        return FileList{};
+    }
 } // namespace Antik::SSH

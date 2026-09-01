@@ -25,6 +25,8 @@
 // =========
 // NAMESPACE
 // =========
+#include "IRemoteFileSystem.hpp"
+
 namespace Antik::SSH
 {
     class CSSHSession;
@@ -34,7 +36,7 @@ namespace Antik::SSH
     // ================
     // CLASS DEFINITION
     // ================
-    class CSFTP : public IOBufferManager
+    class CSFTP : public IOBufferManager, public Network::IRemoteFileSystem
     {
     public:
         // ==========================
@@ -154,7 +156,18 @@ namespace Antik::SSH
         // Create/Remove directories.
         //
         void createDirectory(const std::string &directoryPath, const FilePermissions &filePermissions);
+        void createDirectory(const std::string &path) override;
         void removeDirectory(const std::string &directoryPath);
+        //
+        // IRemoteFileSystem overrides
+        //
+        void changeDir(const std::string &path) override;
+        void getCurrentWorkingDirectory(std::string &path) override;
+        bool isDirectory(const std::string &path) override;
+        bool isFile(const std::string &path) override;
+        void uploadFile(const std::string &localPath, const std::string &remotePath) override;
+        void downloadFile(const std::string &remotePath, const std::string &localPath) override;
+        FileList listDirectory(const std::string &path) override;
         //
         // Create/Remove(delete) symbolic link). Get target file of link.
         //

@@ -525,4 +525,65 @@ namespace Antik::SSH
     {
         return m_session;
     }
+
+    void CSFTP::createDirectory(const std::string &path)
+    {
+        createDirectory(path, 0755);
+    }
+
+    void CSFTP::changeDir(const std::string &path)
+    {
+        (void)path;
+    }
+
+    void CSFTP::getCurrentWorkingDirectory(std::string &path)
+    {
+        path = canonicalizePath(".");
+    }
+
+    bool CSFTP::isDirectory(const std::string &path)
+    {
+        FileAttributes attrs;
+        getFileAttributes(path, attrs);
+        return isADirectory(attrs);
+    }
+
+    bool CSFTP::isFile(const std::string &path)
+    {
+        FileAttributes attrs;
+        getFileAttributes(path, attrs);
+        return isARegularFile(attrs);
+    }
+
+    void CSFTP::uploadFile(const std::string &localPath, const std::string &remotePath)
+    {
+        (void)localPath;
+        (void)remotePath;
+    }
+
+    void CSFTP::downloadFile(const std::string &remotePath, const std::string &localPath)
+    {
+        (void)remotePath;
+        (void)localPath;
+    }
+
+    FileList CSFTP::listDirectory(const std::string &path)
+    {
+        FileList list;
+        Directory dir = openDirectory(path);
+        FileAttributes attrs;
+        while (readDirectory(dir, attrs))
+        {
+            if (attrs && attrs->name)
+            {
+                std::string name(attrs->name);
+                if (name != "." && name != "..")
+                {
+                    list.push_back(name);
+                }
+            }
+        }
+        closeDirectory(dir);
+        return list;
+    }
 } // namespace Antik::SSH

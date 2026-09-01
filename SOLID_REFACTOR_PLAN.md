@@ -60,8 +60,8 @@ public:
 
 ### O — Open/Closed Principle (OCP)
 
-#### Proposed Design
-Define an abstract `IRemoteFileSystem` interface in [`include/IRemoteFileSystem.hpp`](file:///home/robt/projects/antik/include/IRemoteFileSystem.hpp):
+#### Implemented Design
+Defined abstract `IRemoteFileSystem` interface in [`include/IRemoteFileSystem.hpp`](file:///home/robt/projects/antik/include/IRemoteFileSystem.hpp) and implemented it across `CFTP`, `CSFTP`, and `CSCP`:
 
 ```cpp
 namespace Antik::Network {
@@ -69,7 +69,7 @@ namespace Antik::Network {
 class IRemoteFileSystem {
 public:
     virtual ~IRemoteFileSystem() = default;
-    virtual void changeWorkingDirectory(const std::string &path) = 0;
+    virtual void changeDir(const std::string &path) = 0;
     virtual void getCurrentWorkingDirectory(std::string &path) = 0;
     virtual void createDirectory(const std::string &path) = 0;
     virtual bool isDirectory(const std::string &path) = 0;
@@ -116,7 +116,7 @@ Introduce `ISSHSession` and `INetworkClient` interfaces implemented by `CSSHSess
 | P1    | Single Responsibility (SRP) | Extract MailMessageBuilder from   | COMPLETED        |
 |       |                             | CSMTP & IMAPCommandFormatter.     |                  |
 +-------+-----------------------------+-----------------------------------+------------------+
-| P2    | Open/Closed (OCP)           | Define IRemoteFileSystem.         | Ready for Action |
+| P2    | Open/Closed (OCP)           | Define IRemoteFileSystem.         | COMPLETED        |
 |       |                             | Implement in CFTP, CSFTP, CSCP.   |                  |
 +-------+-----------------------------+-----------------------------------+------------------+
 | P3    | Interface Segregation (ISP) | Segregate IApprise into           | Ready for Action |
